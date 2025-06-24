@@ -16,5 +16,3 @@ async def get_embedding(text: str) -> list:
         response = await client.post(url, headers=headers, json=data)
         response.raise_for_status()
         return response.json()["data"][0]["embedding"]
-
-get_embedding
