@@ -1,34 +1,20 @@
-from fastapi import FastAPI, Request
-from utils.embeddings import get_embedding
-from utils.supabase import match_documents
-from handlers.buttons import get_reply_markup, get_age_confirmation_buttons
-from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
-import httpx
-
-app = FastAPI()
-confirmed_users = set()
-
-
-async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "Markdown"
-    }
-    if reply_markup:
-        payload["reply_markup"] = reply_markup
-    async with httpx.AsyncClient() as client:
-        await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
-
-
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     data = await req.json()
-    message = data.get("message") or data.get("callback_query")
-    chat_id = message["chat"]["id"] if "chat" in message else message["from"]["id"]
-    text = message.get("text") or message.get("data") or ""
 
-    # ✅ Проверка возраста (ответ на inline-кнопку)
+    # message или callback_query
+    if "message" in data:
+        message = data["message"]
+        chat_id = message["chat"]["id"]
+        text = message.get("text", "")
+    elif "callback_query" in data:
+        callback = data["callback_query"]
+        chat_id = callback["from"]["id"]
+        text = callback.get("data", "")
+    else:
+        return {"ok": True}
+
+    # ✅ Обработка inline-кнопок
     if text.startswith("age:"):
         if text == "age:yes":
             confirmed_users.add(chat_id)
@@ -36,15 +22,15 @@ async def telegram_webhook(req: Request):
         else:
             return await send_message(chat_id, "🚫 К сожалению, доступ запрещён. Повторно введите /start, если вам уже исполнилось 18.")
 
-    # ✅ Старт команды: предлагаем подтвердить возраст
+    # ✅ Команда /start
     if text.lower() in ["/start", "старт"]:
         return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
 
-    # ✅ Если пользователь не подтвердил возраст — блокируем доступ
+    # ✅ Если возраст не подтверждён
     if chat_id not in confirmed_users:
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
-    # ✅ Обработка выбора категории
+    # ✅ Выбор категории
     if text.startswith("category:"):
         category = text.replace("category:", "")
         results = await match_documents(category=category)
@@ -60,7 +46,7 @@ async def telegram_webhook(req: Request):
 
         return await send_message(chat_id, reply)
 
-    # ✅ Текстовый запрос — эмбеддинг
+    # ✅ Текстовый запрос
     embed = await get_embedding(text)
     results = await match_documents(embed)
 
