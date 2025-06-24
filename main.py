@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from utils.embeddings import get_embedding
-from utils.supabase import match_documents
+from utils.supabase import match_documents, match_documents_by_category
 from handlers.buttons import get_reply_markup, get_age_confirmation_buttons
 from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
 import httpx
@@ -54,16 +54,14 @@ async def telegram_webhook(req: Request):
     # ✅ Выбор категории
     if text.startswith("category:"):
         category = text.replace("category:", "")
-        results = await match_documents(category=category)
+        results = match_documents_by_category(category)
         if not results:
             return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
 
         reply = "\n\n".join([
-            f"*{item['metadata']['title']}*\nЦена: {item['metadata']['price']}₽ • Объём: {item['metadata']['volume']} • Крепость: {item['metadata']['strength']}\n🔗 [Ссылка на товар]({item['metadata']['product_url']})"
-            for item in results[:10]
+            f"*{item['title']}*\nЦена: {item['price']}₽ • Объём: {item['volume']} • Крепость: {item['strength']}\n🔗 [Ссылка на товар]({item['product_url']})"
+            for item in results
         ])
-        if len(results) > 10:
-            reply += f"\n\n_Показано 10 из {len(results)} результатов._"
 
         return await send_message(chat_id, reply)
 
