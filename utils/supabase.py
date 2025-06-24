@@ -21,3 +21,4 @@ def match_documents(embedding, match_count=5, filter={}) -> list:
     else:
         print("❌ Supabase error:", response.status_code, response.text)
         return []
+    match_documents
