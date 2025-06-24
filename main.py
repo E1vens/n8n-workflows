@@ -32,7 +32,7 @@ async def telegram_webhook(req: Request):
     if text.startswith("age:"):
         if text == "age:yes":
             confirmed_users.add(chat_id)
-            return await send_message(chat_id, "✅ Спасибо! Вот доступные категории:", get_reply_markup())
+            return await send_message(chat_id, "✅ Спасибо Большое! Вот доступные категории:", get_reply_markup())
         else:
             return await send_message(chat_id, "🚫 К сожалению, доступ запрещён. Повторно введите /start, если вам уже исполнилось 18.")
 
