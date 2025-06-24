@@ -20,3 +20,12 @@ def get_reply_markup():
 
     return InlineKeyboardMarkup(keyboard).to_dict()
 
+# ✅ Кнопки подтверждения возраста
+def get_age_confirmation_buttons():
+    keyboard = [
+        [
+            InlineKeyboardButton("Да, мне есть 18", callback_data="age:yes"),
+            InlineKeyboardButton("Нет", callback_data="age:no")
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard).to_dict()
