@@ -3,3 +3,4 @@ uvicorn[standard]
 httpx
 requests
 openai
+python-telegram-bot==13.15
