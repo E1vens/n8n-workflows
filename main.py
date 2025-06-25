@@ -66,7 +66,10 @@ async def telegram_webhook(req: Request):
 
     # ✅ Выбор категории с пагинацией
     if text.startswith("category:"):
-        match = re.match(r"category:(?P<cat>.+)(?:&page=(?P<page>\d+))?", text)
+        match = re.match(r"category:(?P<cat>.+?)(?:&page=(?P<page>\\d+))?$", text)
+        if not match:
+            return await send_message(chat_id, "⚠️ Некорректная команда категории.")
+
         category = match.group("cat")
         page = int(match.group("page") or 1)
 
