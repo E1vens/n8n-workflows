@@ -7,13 +7,13 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Range-Unit": "items",
-        "Range": f"{(page - 1) * per_page}-{(page * per_page) - 1}"
+        "Range": f"{(page - 1) * per_page}-{(page * per_page - 1)}"
     }
 
     params = {
         "select": "*",
         "category": f"eq.{category}",
-        "order": f"metadata->>price.{sort}"
+        "order": f"price.{sort}"
     }
 
     try:
