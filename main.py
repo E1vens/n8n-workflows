@@ -62,9 +62,14 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
     if text.startswith("category:"):
-        match = re.match(r"category:(?P<cat>.+?)(?:&page=(?P<page>\\d+))?", text)
+        match = re.match(r"category:(?P<cat>.+?)(?:&page=(?P<page>\d+))?", text)
+        if not match:
+            return await send_message(chat_id, "⚠️ Неверный формат категории.")
+
         category = match.group("cat")
         page = int(match.group("page") or 1)
+
+        print(f"📦 Категория: {category} | Страница: {page}")
 
         results = await run_in_threadpool(match_documents_by_category, category, "asc", page, 10)
 
@@ -88,6 +93,7 @@ async def telegram_webhook(req: Request):
         }
 
         return await send_message(chat_id, reply, next_page_btn)
+
 
     embed = await get_embedding(text)
     results = await match_documents(embed)
