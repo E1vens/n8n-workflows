@@ -10,14 +10,11 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         "Range": f"{(page - 1) * per_page}-{(page * per_page - 1)}"
     }
 
-    params = {
-        "select": "*",
-        "category": f"eq.{category}",
-        "order": f"price.{sort}"
-    }
+    # `order` в Supabase нельзя передавать через обычный `params`, поэтому добавим его в URL напрямую
+    full_url = f"{url}?select=*&category=eq.{category}&order=price.{sort}"
 
     try:
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(full_url, headers=headers)
         response.raise_for_status()
         return response.json()
     except Exception as e:
