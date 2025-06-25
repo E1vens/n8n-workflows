@@ -1,17 +1,20 @@
 import requests
 from config import SUPABASE_URL, SUPABASE_KEY
 
-def match_documents_by_category(category: str) -> list:
+def match_documents_by_category(category: str, sort: str = "asc", page: int = 1, per_page: int = 10) -> list:
     url = f"{SUPABASE_URL}/rest/v1/documents"
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}"
     }
 
+    offset = (page - 1) * per_page
     params = {
         "select": "*",
         "category": f"eq.{category}",
-        "limit": 10
+        "order": f"price.{sort}",
+        "offset": str(offset),
+        "limit": str(per_page)
     }
 
     try:
@@ -21,6 +24,8 @@ def match_documents_by_category(category: str) -> list:
     except Exception as e:
         print("❌ Supabase category error:", str(e))
         return []
+
+# Заглушка, можешь оставить как есть
 async def match_documents(embedding: list) -> list:
     print("⚠️ Заглушка match_documents вызвана")
     return []
