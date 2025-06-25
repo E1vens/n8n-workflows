@@ -10,20 +10,19 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         "Range": f"{(page - 1) * per_page}-{(page * per_page) - 1}"
     }
 
-    # Внимание: фильтруем по вложенному полю metadata->>category
     params = {
-        "select": "*",
+        "select": "metadata",
         "metadata->>category": f"eq.{category}",
-        "order": f"metadata->>title.{sort}"
+        "order": f"metadata->>price.{sort}",
     }
 
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        return response.json()
+        return [item["metadata"] for item in response.json()]
     except Exception as e:
-        print("\u274c Supabase category error:", str(e))
-        print("\ud83d\udce6 Ответ Supabase:", response.text)
+        print("❌ Supabase category error:", str(e))
+        print("📦 Ответ Supabase:", response.text)
         return []
 
 # Заглушка для текстового поиска (эмбеддингов)
