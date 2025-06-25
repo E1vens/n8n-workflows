@@ -5,6 +5,7 @@ from utils.supabase import match_documents, match_documents_by_category
 from handlers.buttons import get_reply_markup, get_age_confirmation_buttons
 from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
 import httpx
+import re
 
 print("✅ main.py успешно загружен")
 
@@ -33,7 +34,6 @@ async def telegram_webhook(req: Request):
     chat_id = None
     text = ""
 
-    # message или callback_query
     if "message" in data:
         message = data["message"]
         chat_id = message["chat"]["id"]
@@ -48,7 +48,7 @@ async def telegram_webhook(req: Request):
     if not chat_id or not text:
         return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
 
-    # ✅ Обработка inline-кнопок
+    # ✅ Обработка inline-кнопок подтверждения возраста
     if text.startswith("age:"):
         if text == "age:yes":
             confirmed_users.add(chat_id)
@@ -64,24 +64,34 @@ async def telegram_webhook(req: Request):
     if chat_id not in confirmed_users:
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
-    # ✅ Выбор категории
+    # ✅ Выбор категории с пагинацией
     if text.startswith("category:"):
-        category = text.replace("category:", "")
-        results = await run_in_threadpool(match_documents_by_category, category)
+        match = re.match(r"category:(?P<cat>.+?)(?:&page=(?P<page>\d+))?", text)
+        category = match.group("cat")
+        page = int(match.group("page") or 1)
+
+        results = await run_in_threadpool(match_documents_by_category, category, "asc", page)
 
         if not results:
             return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
 
         reply = "\n\n".join([
-            f"*{item.get('metadata', {}).get('title', 'Без названия')}*\n"
-            f"Цена: {item.get('metadata', {}).get('price', '?')}₽ • "
-            f"Объём: {item.get('metadata', {}).get('volume', '?')} • "
-            f"Крепость: {item.get('metadata', {}).get('strength', '?')}\n"
-            f"🔗 [Ссылка на товар]({item.get('metadata', {}).get('product_url', '#')})"
+            f"*{item.get('title', 'Без названия')}*\n"
+            f"Цена: {item.get('price', '?')}₽ • "
+            f"Объём: {item.get('volume', '?')} • "
+            f"Крепость: {item.get('strength', '?')}\n"
+            f"🔗 [Ссылка на товар]({item.get('product_url', '#')})"
             for item in results
         ])
 
-        return await send_message(chat_id, reply)
+        next_page_btn = {
+            "inline_keyboard": [[{
+                "text": "➡️ Следующая страница",
+                "callback_data": f"category:{category}&page={page + 1}"
+            }]]
+        }
+
+        return await send_message(chat_id, reply, next_page_btn)
 
     # ✅ Текстовый запрос (эмбеддинг)
     embed = await get_embedding(text)
