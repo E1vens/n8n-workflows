@@ -10,7 +10,7 @@ def match_documents_by_category(category: str) -> list:
 
     params = {
         "select": "*",
-        "metadata->>category": f"eq.{category}",
+        "category": f"eq.{category}",
         "limit": 10
     }
 
