@@ -11,8 +11,7 @@ def match_documents_by_category(category: str) -> list:
 
     params = {
         "select": "*",
-        "category": f"eq.{category}"
-        "order": "price.asc"
+        "metadata->>category": f"eq.{category}",
         "limit": 10
     }
 
