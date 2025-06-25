@@ -21,3 +21,6 @@ def match_documents_by_category(category: str) -> list:
     except Exception as e:
         print("❌ Supabase category error:", str(e))
         return []
+async def match_documents(embedding: list) -> list:
+    print("⚠️ Заглушка match_documents вызвана")
+    return []
