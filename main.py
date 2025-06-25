@@ -73,7 +73,7 @@ async def telegram_webhook(req: Request):
         category = match.group("cat")
         page = int(match.group("page") or 1)
 
-        results = await run_in_threadpool(match_documents_by_category, category, "asc", page)
+        results = await run_in_threadpool(match_documents_by_category, category, "asc", page, 10)
 
         if not results:
             return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
