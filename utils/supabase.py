@@ -1,6 +1,5 @@
 import requests
-import json
-from config import SUPABASE_URL, SUPABASE_KEY, SUPABASE_RPC_FUNCTION
+from config import SUPABASE_URL, SUPABASE_KEY
 
 def match_documents_by_category(category: str) -> list:
     url = f"{SUPABASE_URL}/rest/v1/documents"
@@ -15,9 +14,10 @@ def match_documents_by_category(category: str) -> list:
         "limit": 10
     }
 
-    response = requests.get(url, headers=headers, params=params)
-    if response.status_code == 200:
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
         return response.json()
-    else:
-        print("❌ Supabase category error:", response.status_code, response.text)
+    except Exception as e:
+        print("❌ Supabase category error:", str(e))
         return []
