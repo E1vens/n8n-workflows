@@ -5,16 +5,15 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
     url = f"{SUPABASE_URL}/rest/v1/documents"
     headers = {
         "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}"
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Range-Unit": "items",
+        "Range": f"{(page - 1) * per_page}-{(page * per_page) - 1}"
     }
 
-    offset = (page - 1) * per_page
     params = {
         "select": "*",
         "category": f"eq.{category}",
-        "order": f"price.{sort}",
-        "offset": str(offset),
-        "limit": str(per_page)
+        "order": f"price.{sort}"
     }
 
     try:
@@ -24,8 +23,3 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
     except Exception as e:
         print("❌ Supabase category error:", str(e))
         return []
-
-# Заглушка, можешь оставить как есть
-async def match_documents(embedding: list) -> list:
-    print("⚠️ Заглушка match_documents вызвана")
-    return []
