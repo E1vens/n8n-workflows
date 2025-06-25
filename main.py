@@ -48,7 +48,6 @@ async def telegram_webhook(req: Request):
     if not chat_id or not text:
         return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
 
-    # ✅ Обработка inline-кнопок подтверждения возраста
     if text.startswith("age:"):
         if text == "age:yes":
             confirmed_users.add(chat_id)
@@ -56,20 +55,14 @@ async def telegram_webhook(req: Request):
         else:
             return await send_message(chat_id, "🚫 К сожалению, доступ запрещён. Повторно введите /start, если вам уже исполнилось 18.")
 
-    # ✅ Команда /start
     if text.lower() in ["/start", "старт"]:
         return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
 
-    # ✅ Если возраст не подтверждён
     if chat_id not in confirmed_users:
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
-    # ✅ Выбор категории с пагинацией
     if text.startswith("category:"):
-        match = re.match(r"category:(?P<cat>.+?)(?:&page=(?P<page>\\d+))?$", text)
-        if not match:
-            return await send_message(chat_id, "⚠️ Некорректная команда категории.")
-
+        match = re.match(r"category:(?P<cat>.+?)(?:&page=(?P<page>\\d+))?", text)
         category = match.group("cat")
         page = int(match.group("page") or 1)
 
@@ -96,7 +89,6 @@ async def telegram_webhook(req: Request):
 
         return await send_message(chat_id, reply, next_page_btn)
 
-    # ✅ Текстовый запрос (эмбеддинг)
     embed = await get_embedding(text)
     results = await match_documents(embed)
 
