@@ -62,7 +62,7 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
     if text.startswith("category:"):
-        match = re.match(r"category:(?P<cat>.+?)(?:&page=(?P<page>\d+))?", text)
+        match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
         if not match:
             return await send_message(chat_id, "⚠️ Неверный формат категории.")
 
