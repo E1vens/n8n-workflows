@@ -11,21 +11,21 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
     }
 
     params = {
-        "select": "metadata",
-        "metadata->>category": f"eq.{category}",
-        "order": f"metadata->>price.{sort}",
+        "select": "*",
+        "category": f"eq.{category}",
+        "order": f"metadata->>price.{sort}"
     }
 
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        return [item["metadata"] for item in response.json()]
+        return response.json()
     except Exception as e:
         print("❌ Supabase category error:", str(e))
         print("📦 Ответ Supabase:", response.text)
         return []
 
-# Заглушка для текстового поиска (эмбеддингов)
+# Заглушка для поиска по эмбеддингам
 async def match_documents(embedding: list) -> list:
-    print("\u26a0\ufe0f Заглушка match_documents вызвана")
+    print("⚠️ Заглушка match_documents вызвана")
     return []
