@@ -23,8 +23,11 @@ jobs:
     - name: Deploy on VPS
       run: |
         ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          set -e
           cd /root/veld21-bot
           git pull origin main
           docker compose down
           docker compose up -d --build
+          echo "📦 Логи контейнера после запуска:"
+          docker logs veld21-bot --tail=50 || echo "Контейнер не стартовал или нет логов"
         EOF
