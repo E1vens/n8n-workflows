@@ -18,9 +18,9 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
 
     try:
         response = requests.get(url, headers=headers, params=params)
+        print("🔎 Supabase response:", response.status_code, response.text)
         response.raise_for_status()
         return response.json()
     except Exception as e:
         print("❌ Supabase category error:", str(e))
-        print("📦 Ответ Supabase:", response.text)
         return []
