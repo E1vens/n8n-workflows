@@ -10,11 +10,14 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         "Range": f"{(page - 1) * per_page}-{(page * per_page - 1)}"
     }
 
-    # `order` в Supabase нельзя передавать через обычный `params`, поэтому добавим его в URL напрямую
-    full_url = f"{url}?select=*&category=eq.{category}&order=price.{sort}"
+    params = {
+        "select": "*",
+        "category": f"eq.{category}",
+        "order": f"price.{sort}"
+    }
 
     try:
-        response = requests.get(full_url, headers=headers)
+        response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -22,7 +25,7 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         print("📦 Ответ Supabase:", response.text)
         return []
 
-# Заглушка для поиска по эмбеддингам
+# Заглушка для поиска по эмбеддингам (оставляем до подключения n8n)
 async def match_documents(embedding: list) -> list:
     print("⚠️ Заглушка match_documents вызвана")
     return []
