@@ -6,6 +6,8 @@ from handlers.buttons import get_reply_markup, get_age_confirmation_buttons
 from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
 import httpx
 
+print("✅ main.py успешно загружен")
+
 app = FastAPI()
 confirmed_users = set()
 
