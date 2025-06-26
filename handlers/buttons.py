@@ -1,6 +1,19 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
-def get_reply_markup():
+
+# ✅ Кнопки подтверждения возраста
+def get_age_confirmation_buttons():
+    keyboard = [
+        [
+            InlineKeyboardButton("Да, мне есть 18", callback_data="age:yes"),
+            InlineKeyboardButton("Нет", callback_data="age:no")
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard).to_dict()
+
+
+# ✅ Категории товаров (inline-кнопки)
+def get_category_buttons():
     categories = [
         "Виски",
         "Коньяк и Арманьяк",
@@ -12,20 +25,18 @@ def get_reply_markup():
         "Крепкое вино",
         "Другие"
     ]
-
     keyboard = [
         [InlineKeyboardButton(text=title, callback_data=f"category:{title}")]
         for title in categories
     ]
-
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-# ✅ Кнопки подтверждения возраста
-def get_age_confirmation_buttons():
+
+# ✅ Нижнее меню (reply-кнопки, всегда отображаются)
+def get_main_menu():
     keyboard = [
-        [
-            InlineKeyboardButton("Да, мне есть 18", callback_data="age:yes"),
-            InlineKeyboardButton("Нет", callback_data="age:no")
-        ]
+        [KeyboardButton("🛍 Каталог"), KeyboardButton("🤖 ИИ консультант")],
+        [KeyboardButton("ℹ️ Информация о товаре"), KeyboardButton("🌐 Выбрать язык")],
+        [KeyboardButton("🎁 Карта лояльности")]
     ]
-    return InlineKeyboardMarkup(keyboard).to_dict()
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True).to_dict()
