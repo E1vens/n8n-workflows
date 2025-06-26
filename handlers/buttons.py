@@ -40,3 +40,11 @@ def get_main_menu():
         [KeyboardButton("🎁 Карта лояльности")]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True).to_dict()
+
+
+# ✅ Кнопка выхода из ИИ-консультанта (reply-кнопка)
+def get_ai_exit_button():
+    keyboard = [
+        [KeyboardButton("🔙 Выйти из ИИ")]
+    ]
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True).to_dict()
