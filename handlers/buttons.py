@@ -8,7 +8,7 @@ def get_age_confirmation_buttons():
             InlineKeyboardButton("Нет", callback_data="age:no")
         ]
     ]
-    return InlineKeyboardMarkup(keyboard).to_dict()
+    return InlineKeyboardMarkup(keyboard)
 
 # ✅ Категории товаров (inline-кнопки)
 def get_category_buttons():
@@ -27,7 +27,7 @@ def get_category_buttons():
         [InlineKeyboardButton(text=title, callback_data=f"category:{title}")]
         for title in categories
     ]
-    return InlineKeyboardMarkup(keyboard).to_dict()
+    return InlineKeyboardMarkup(keyboard)
 
 # ✅ Главное меню (reply-кнопки)
 def get_main_menu():
