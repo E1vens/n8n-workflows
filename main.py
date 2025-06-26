@@ -19,14 +19,15 @@ import httpx
 app = FastAPI()
 
 
-async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
+async def send_message(chat_id: int, text: str, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | None = None):
     payload = {
         "chat_id": chat_id,
         "text": text,
         "parse_mode": "Markdown"
     }
     if reply_markup:
-        payload["reply_markup"] = reply_markup
+        payload["reply_markup"] = reply_markup.to_dict()  # 💡 Только тут to_dict()
+
     async with httpx.AsyncClient() as client:
         await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
