@@ -1,24 +1,72 @@
 from fastapi import FastAPI, Request
-from telegram import InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telegram import InlineKeyboardMarkup, ReplyKeyboardMarkup, InlineKeyboardButton, KeyboardButton
 from config import TELEGRAM_API_URL
 from utils.embeddings import get_embedding
 from utils.supabase import match_documents
-from handlers.age import (
-    request_age_confirmation,
-    handle_age_confirmation,
-    is_confirmed
-)
-from handlers.catalog import handle_category_selection
-from handlers.ai import is_ai_active, activate_ai, deactivate_ai
-from handlers.buttons import (
-    get_main_menu,
-    get_category_buttons,
-    get_ai_exit_button
-)
 import httpx
 
 app = FastAPI()
 
+# ✅ Проверка подтверждения возраста
+confirmed_users = set()
+
+def is_confirmed(chat_id):
+    return chat_id in confirmed_users
+
+def handle_age_confirmation(chat_id, data):
+    if data == "age:yes":
+        confirmed_users.add(chat_id)
+        return {
+            "text": "✅ Спасибо! Вот доступные категории:",
+            "reply_markup": get_category_buttons()
+        }
+    else:
+        return {
+            "text": "🚫 Доступ запрещён. Вы не подтвердили возраст."
+        }
+
+def request_age_confirmation():
+    keyboard = [
+        [
+            InlineKeyboardButton("Да, мне есть 18", callback_data="age:yes"),
+            InlineKeyboardButton("Нет", callback_data="age:no")
+        ]
+    ]
+    return {
+        "text": "Подтвердите, пожалуйста, что вам есть 18 лет:",
+        "reply_markup": InlineKeyboardMarkup(keyboard)
+    }
+
+def get_category_buttons():
+    categories = [
+        "Виски", "Коньяк и Арманьяк", "Кальвадос", "Водка", "Джин",
+        "Шампанское и игристое", "Вино", "Крепкое вино", "Другие"
+    ]
+    keyboard = [[InlineKeyboardButton(text=title, callback_data=f"category:{title}")] for title in categories]
+    return InlineKeyboardMarkup(keyboard)
+
+def get_main_menu():
+    keyboard = [
+        [KeyboardButton("🛍 Каталог"), KeyboardButton("🤖 ИИ консультант")],
+        [KeyboardButton("ℹ️ Информация о товаре"), KeyboardButton("🌐 Выбрать язык")],
+        [KeyboardButton("🎁 Карта лояльности")]
+    ]
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+def get_ai_exit_button():
+    keyboard = [[KeyboardButton("🔙 Выйти из ИИ")]]
+    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+
+ai_enabled = set()
+
+def is_ai_active(chat_id):
+    return chat_id in ai_enabled
+
+def activate_ai(chat_id):
+    ai_enabled.add(chat_id)
+
+def deactivate_ai(chat_id):
+    ai_enabled.discard(chat_id)
 
 async def send_message(chat_id: int, text: str, reply_markup: InlineKeyboardMarkup | ReplyKeyboardMarkup | None = None):
     payload = {
@@ -27,11 +75,10 @@ async def send_message(chat_id: int, text: str, reply_markup: InlineKeyboardMark
         "parse_mode": "Markdown"
     }
     if reply_markup:
-        payload["reply_markup"] = reply_markup.to_dict()  # 💡 Только тут to_dict()
+        payload["reply_markup"] = reply_markup.to_dict()
 
     async with httpx.AsyncClient() as client:
         await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
-
 
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
@@ -41,13 +88,11 @@ async def telegram_webhook(req: Request):
     chat_id = None
     text = ""
 
-    # ✅ Обработка обычных сообщений
     if "message" in data:
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "").strip()
 
-    # ✅ Обработка callback-кнопок
     elif "callback_query" in data:
         callback = data["callback_query"]
         chat_id = callback["from"]["id"]
@@ -62,36 +107,30 @@ async def telegram_webhook(req: Request):
                 json={"callback_query_id": callback_id}
             )
 
-        # ✅ Обработка подтверждения возраста
         if text.startswith("age:"):
             resp = handle_age_confirmation(chat_id, text)
             return await send_message(chat_id, resp["text"], resp.get("reply_markup"))
 
-        # ✅ Обработка выбора категории
         if text.startswith("category:"):
-            return await handle_category_selection(chat_id, text, send_message)
+            return await send_message(chat_id, f"Вы выбрали категорию: {text.split(':', 1)[1]}")
 
         return {"ok": True}
 
-    # ✅ Проверка на наличие chat_id и текста
     if not chat_id or not text:
         return {"ok": True}
 
-    # ✅ /start
     if text.lower() in ["/start", "старт"]:
         response = request_age_confirmation()
         return await send_message(chat_id, response["text"], response["reply_markup"])
 
-    # ✅ Защита по возрасту
     if not is_confirmed(chat_id):
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
-    # ✅ Главное меню и команды
     if text == "🛍 Каталог":
         return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
 
     if text.startswith("category:"):
-        return await handle_category_selection(chat_id, text, send_message)
+        return await send_message(chat_id, f"Вы выбрали категорию: {text.split(':', 1)[1]}")
 
     if text == "🤖 ИИ консультант":
         activate_ai(chat_id)
@@ -110,7 +149,6 @@ async def telegram_webhook(req: Request):
     if text == "🎁 Карта лояльности":
         return await send_message(chat_id, "🔖 Карта лояльности доступна в магазине. Оформим при покупке.")
 
-    # ✅ ИИ-поиск по эмбеддингу
     if is_ai_active(chat_id):
         embed = await get_embedding(text)
         results = await match_documents(embed)
@@ -123,7 +161,7 @@ async def telegram_webhook(req: Request):
             f"Цена: {item['metadata'].get('price', '?')}₽ • "
             f"Объём: {item['metadata'].get('volume', '?')} • "
             f"Крепость: {item['metadata'].get('strength', '?')}\n"
-            f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#')})"
+            f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#'})")
             for item in results[:10]
         ])
         return await send_message(chat_id, reply)
