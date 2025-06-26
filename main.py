@@ -2,15 +2,18 @@ from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from utils.embeddings import get_embedding
 from utils.supabase import match_documents, match_documents_by_category
-from handlers.buttons import get_reply_markup, get_age_confirmation_buttons
-from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
+from handlers.buttons import (
+    get_age_confirmation_buttons,
+    get_main_menu,
+    get_category_buttons
+)
+from config import TELEGRAM_API_URL
 import httpx
 import re
 
-print("✅ main.py успешно загружен")
-
 app = FastAPI()
 confirmed_users = set()
+
 
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
     payload = {
@@ -23,13 +26,10 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
     async with httpx.AsyncClient() as client:
         await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
+
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
-    try:
-        data = await req.json()
-    except Exception as e:
-        print("❌ Ошибка чтения запроса:", e)
-        return {"ok": False}
+    data = await req.json()
 
     chat_id = None
     text = ""
@@ -45,34 +45,48 @@ async def telegram_webhook(req: Request):
     else:
         return {"ok": True}
 
-    if not chat_id or not text:
-        return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
-
+    # ✅ Обработка подтверждения возраста
     if text.startswith("age:"):
         if text == "age:yes":
             confirmed_users.add(chat_id)
-            return await send_message(chat_id, "✅ Спасибо! Вот доступные категории:", get_reply_markup())
+            await send_message(chat_id, "✅ Спасибо! Меню доступно:", get_main_menu())
         else:
-            return await send_message(chat_id, "🚫 К сожалению, доступ запрещён. Повторно введите /start, если вам уже исполнилось 18.")
+            await send_message(chat_id, "🚫 Доступ запрещён. Повторите /start, если вам уже исполнилось 18.")
+        return {"ok": True}
 
+    # ✅ Команда /start
     if text.lower() in ["/start", "старт"]:
         return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
 
+    # ✅ Проверка возраста
     if chat_id not in confirmed_users:
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
+    # ✅ Обработка нижнего меню
+    if text == "🛍 Каталог":
+        return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
+
+    if text == "🤖 ИИ консультант":
+        return await send_message(chat_id, "Задай свой вопрос о товаре — я постараюсь помочь!")
+
+    if text == "ℹ️ Информация о товаре":
+        return await send_message(chat_id, "Отправьте название товара — я найду описание и характеристики.")
+
+    if text == "🌐 Выбрать язык":
+        return await send_message(chat_id, "Язык пока только русский. Скоро добавим другие!")
+
+    if text == "🎁 Карта лояльности":
+        return await send_message(chat_id, "🔖 Карта лояльности доступна в магазине. Оформим при покупке.")
+
+    # ✅ Обработка inline-кнопок категорий
     if text.startswith("category:"):
         match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
         if not match:
             return await send_message(chat_id, "⚠️ Неверный формат категории.")
-
         category = match.group("cat")
         page = int(match.group("page") or 1)
 
-        print(f"📦 Категория: {category} | Страница: {page}")
-
         results = await run_in_threadpool(match_documents_by_category, category, "asc", page, 10)
-
         if not results:
             return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
 
@@ -94,12 +108,12 @@ async def telegram_webhook(req: Request):
 
         return await send_message(chat_id, reply, next_page_btn)
 
-
+    # ✅ Поиск по эмбеддингу (ИИ консультант)
     embed = await get_embedding(text)
     results = await match_documents(embed)
 
     if not results:
-        return await send_message(chat_id, "К сожалению, ничего не найдено. Попробуйте другой запрос.")
+        return await send_message(chat_id, "Ничего не найдено. Попробуй переформулировать запрос.")
 
     reply = "\n\n".join([
         f"*{item['metadata'].get('title', 'Без названия')}*\n"
@@ -109,8 +123,5 @@ async def telegram_webhook(req: Request):
         f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#')})"
         for item in results[:10]
     ])
-
-    if len(results) > 10:
-        reply += f"\n\n_Показано 10 из {len(results)} результатов._"
 
     return await send_message(chat_id, reply)
