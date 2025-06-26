@@ -161,7 +161,7 @@ async def telegram_webhook(req: Request):
             f"Цена: {item['metadata'].get('price', '?')}₽ • "
             f"Объём: {item['metadata'].get('volume', '?')} • "
             f"Крепость: {item['metadata'].get('strength', '?')}\n"
-            f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#'})")
+            f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#')})"
             for item in results[:10]
         ])
         return await send_message(chat_id, reply)
