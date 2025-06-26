@@ -9,7 +9,7 @@ from handlers.age import (
     is_confirmed
 )
 from handlers.catalog import handle_category_selection
-from handlers.ai import is_ai_active, activate_ai, deactivate_ai
+from handlers.age import is_confirmed, confirm_user, handle_age_confirmation, request_age_confirmation
 from handlers.buttons import (
     get_main_menu,
     get_category_buttons,
@@ -35,6 +35,7 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     data = await req.json()
+
     chat_id = None
     text = ""
 
@@ -42,11 +43,21 @@ async def telegram_webhook(req: Request):
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "").strip()
+
     elif "callback_query" in data:
         callback = data["callback_query"]
         chat_id = callback["from"]["id"]
         text = callback.get("data", "").strip()
-    else:
+
+        # ✅ Обработка нажатия кнопки подтверждения возраста
+        if text.startswith("age:"):
+            resp = handle_age_confirmation(chat_id, text)
+            return await send_message(chat_id, resp["text"], resp.get("reply_markup"))
+
+        # ✅ Обработка inline-категорий
+        if text.startswith("category:"):
+            return await handle_category_selection(chat_id, text, send_message)
+
         return {"ok": True}
 
     # Возраст
