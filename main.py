@@ -15,7 +15,6 @@ import re
 
 app = FastAPI()
 confirmed_users = set()
-active_ai_users = set()
 
 
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
