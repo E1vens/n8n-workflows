@@ -13,7 +13,7 @@ def handle_age_confirmation(chat_id: int, text: str):
     cleaned = text.strip().lower()
     print(f"📩 Обработка подтверждения возраста: chat_id={chat_id}, text='{text}'")
     
-    if cleaned.startswith("age:yes"):
+    if cleaned == "age:yes":
         confirm_user(chat_id)
         return {
             "text": "✅ Спасибо! Меню доступно:",
