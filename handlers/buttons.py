@@ -2,15 +2,13 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 
 # ✅ Кнопки подтверждения возраста (разделены по строкам)
 def get_age_confirmation_buttons():
-    return {
-        "inline_keyboard": [
-            [
-                {"text": "Да, мне есть 18", "callback_data": "age:yes"},
-                {"text": "Нет", "callback_data": "age:no"}
-            ]
+    keyboard = [
+        [
+            InlineKeyboardButton("Да, мне есть 18", callback_data="age:yes"),
+            InlineKeyboardButton("Нет", callback_data="age:no")
         ]
-    }
-
+    ]
+    return InlineKeyboardMarkup(keyboard).to_dict()
 
 # ✅ Категории товаров (inline-кнопки)
 def get_category_buttons():
