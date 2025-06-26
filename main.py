@@ -14,6 +14,7 @@ def is_confirmed(chat_id):
     return chat_id in confirmed_users
 
 def handle_age_confirmation(chat_id, data):
+    print(f"👤 ОБРАБОТКА возраста: chat_id={chat_id}, data={data}")
     if data == "age:yes":
         confirmed_users.add(chat_id)
         return {
