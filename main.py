@@ -1,36 +1,22 @@
 from fastapi import FastAPI, Request
-from config import TELEGRAM_API_URL
 from fastapi.concurrency import run_in_threadpool
+from config import TELEGRAM_API_URL
+from utils.sender import send_message
+from handlers.age import handle_start, handle_age_confirmation, is_age_confirmed
+from handlers.ai import is_ai_active, activate_ai, deactivate_ai
+from handlers.catalog import handle_catalog, handle_category
+from handlers.buttons import get_main_menu, get_ai_exit_button
 from utils.embeddings import get_embedding
 from utils.supabase import match_documents
-from handlers.ai import is_ai_active, activate_ai, deactivate_ai
-from handlers.age import handle_age_confirmation, is_confirmed, get_age_keyboard
-from handlers.catalog import handle_category_selection
-from handlers.buttons import (
-    get_main_menu,
-    get_category_buttons,
-    get_ai_exit_button
-)
 import httpx
+import re
 
 app = FastAPI()
-
-
-async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "Markdown"
-    }
-    if reply_markup:
-        payload["reply_markup"] = reply_markup
-    async with httpx.AsyncClient() as client:
-        await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
-
 
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     data = await req.json()
+
     chat_id = None
     text = ""
 
@@ -45,19 +31,21 @@ async def telegram_webhook(req: Request):
     else:
         return {"ok": True}
 
-    # ✅ Обработка возраста
+    # ✅ Обработка подтверждения возраста
     if text.startswith("age:"):
-        return await handle_age_confirmation(chat_id, text, send_message)
+        return await handle_age_confirmation(chat_id, text)
 
+    # ✅ Команда /start
     if text.lower() in ["/start", "старт"]:
-        return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_keyboard())
+        return await handle_start(chat_id)
 
-    if not is_confirmed(chat_id):
+    # ✅ Проверка возраста
+    if not is_age_confirmed(chat_id):
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
-    # ✅ Обработка текстовых кнопок
-    if text == "🏍 Каталог":
-        return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
+    # ✅ Обработка нижнего меню
+    if text == "🛍 Каталог":
+        return await handle_catalog(chat_id)
 
     if text == "🤖 ИИ консультант":
         activate_ai(chat_id)
@@ -76,10 +64,11 @@ async def telegram_webhook(req: Request):
     if text == "🎁 Карта лояльности":
         return await send_message(chat_id, "🔖 Карта лояльности доступна в магазине. Оформим при покупке.")
 
+    # ✅ Обработка inline-кнопок категорий
     if text.startswith("category:"):
-        return await handle_category_selection(chat_id, text, send_message)
+        return await handle_category(chat_id, text)
 
-    # ✅ ИИ-поиск
+    # ✅ Поиск по эмбеддингу (ИИ-консультант)
     if not is_ai_active(chat_id):
         return {"ok": True}
 
