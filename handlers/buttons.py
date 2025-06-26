@@ -1,16 +1,12 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
-
-# ✅ Кнопки подтверждения возраста
+# ✅ Кнопки подтверждения возраста (разделены по строкам)
 def get_age_confirmation_buttons():
     keyboard = [
-        [
-            InlineKeyboardButton("Да, мне есть 18", callback_data="age:yes"),
-            InlineKeyboardButton("Нет", callback_data="age:no")
-        ]
+        [InlineKeyboardButton("✅ Да, мне есть 18", callback_data="age:yes")],
+        [InlineKeyboardButton("🚫 Нет", callback_data="age:no")]
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
-
 
 # ✅ Категории товаров (inline-кнопки)
 def get_category_buttons():
@@ -31,8 +27,7 @@ def get_category_buttons():
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-
-# ✅ Нижнее меню (reply-кнопки, всегда отображаются)
+# ✅ Главное меню (reply-кнопки)
 def get_main_menu():
     keyboard = [
         [KeyboardButton("🛍 Каталог"), KeyboardButton("🤖 ИИ консультант")],
@@ -40,7 +35,6 @@ def get_main_menu():
         [KeyboardButton("🎁 Карта лояльности")]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True).to_dict()
-
 
 # ✅ Кнопка выхода из ИИ-консультанта (reply-кнопка)
 def get_ai_exit_button():
