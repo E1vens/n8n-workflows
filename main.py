@@ -5,7 +5,8 @@ from utils.supabase import match_documents, match_documents_by_category
 from handlers.buttons import (
     get_age_confirmation_buttons,
     get_main_menu,
-    get_category_buttons
+    get_category_buttons,
+    get_ai_exit_button
 )
 from config import TELEGRAM_API_URL
 import httpx
@@ -13,6 +14,7 @@ import re
 
 app = FastAPI()
 confirmed_users = set()
+active_ai_users = set()
 
 
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
@@ -63,11 +65,16 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
     # ✅ Обработка нижнего меню
-    if text == "🛍 Каталог":
+    if text == "🏍 Каталог":
         return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
 
     if text == "🤖 ИИ консультант":
-        return await send_message(chat_id, "Задай свой вопрос о товаре — я постараюсь помочь!")
+        active_ai_users.add(chat_id)
+        return await send_message(chat_id, "ИИ-консультант активирован. Задай свой вопрос:", get_ai_exit_button())
+
+    if text == "🔙 Выйти из ИИ":
+        active_ai_users.discard(chat_id)
+        return await send_message(chat_id, "ИИ-консультант отключён. Выберите действие из меню:", get_main_menu())
 
     if text == "ℹ️ Информация о товаре":
         return await send_message(chat_id, "Отправьте название товара — я найду описание и характеристики.")
@@ -80,7 +87,7 @@ async def telegram_webhook(req: Request):
 
     # ✅ Обработка inline-кнопок категорий
     if text.startswith("category:"):
-        match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
+        match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\\d+))?", text)
         if not match:
             return await send_message(chat_id, "⚠️ Неверный формат категории.")
         category = match.group("cat")
@@ -92,7 +99,7 @@ async def telegram_webhook(req: Request):
 
         reply = "\n\n".join([
             f"*{item.get('title', 'Без названия')}*\n"
-            f"Цена: {item.get('price', '?')}₽ • "
+            f"Цена: {item.get('price', '?')}\u20bd • "
             f"Объём: {item.get('volume', '?')} • "
             f"Крепость: {item.get('strength', '?')}\n"
             f"🔗 [Ссылка на товар]({item.get('product_url', '#')})"
@@ -108,7 +115,10 @@ async def telegram_webhook(req: Request):
 
         return await send_message(chat_id, reply, next_page_btn)
 
-    # ✅ Поиск по эмбеддингу (ИИ консультант)
+    # ✅ Поиск по эмбеддингу (ИИ-консультант)
+    if chat_id not in active_ai_users:
+        return {"ok": True}
+
     embed = await get_embedding(text)
     results = await match_documents(embed)
 
@@ -117,7 +127,7 @@ async def telegram_webhook(req: Request):
 
     reply = "\n\n".join([
         f"*{item['metadata'].get('title', 'Без названия')}*\n"
-        f"Цена: {item['metadata'].get('price', '?')}₽ • "
+        f"Цена: {item['metadata'].get('price', '?')}\u20bd • "
         f"Объём: {item['metadata'].get('volume', '?')} • "
         f"Крепость: {item['metadata'].get('strength', '?')}\n"
         f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#')})"
