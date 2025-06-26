@@ -35,6 +35,7 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     data = await req.json()
+    print("📥 ПОЛУЧЕНО:", data)
 
     chat_id = None
     text = ""
