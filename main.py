@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from utils.embeddings import get_embedding
 from utils.supabase import match_documents, match_documents_by_category
+from handlers.ai import is_ai_active, activate_ai, deactivate_ai
 from handlers.buttons import (
     get_age_confirmation_buttons,
     get_main_menu,
@@ -69,11 +70,11 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
 
     if text == "🤖 ИИ консультант":
-        active_ai_users.add(chat_id)
+        activate_ai(chat_id)
         return await send_message(chat_id, "ИИ-консультант активирован. Задай свой вопрос:", get_ai_exit_button())
 
     if text == "🔙 Выйти из ИИ":
-        active_ai_users.discard(chat_id)
+        deactivate_ai(chat_id)
         return await send_message(chat_id, "ИИ-консультант отключён. Выберите действие из меню:", get_main_menu())
 
     if text == "ℹ️ Информация о товаре":
@@ -116,7 +117,7 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, reply, next_page_btn)
 
     # ✅ Поиск по эмбеддингу (ИИ-консультант)
-    if chat_id not in active_ai_users:
+    if not is_ai_active(chat_id):
         return {"ok": True}
 
     embed = await get_embedding(text)
