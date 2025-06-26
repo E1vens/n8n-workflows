@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from telegram import InlineKeyboardMarkup, ReplyKeyboardMarkup
 from config import TELEGRAM_API_URL
 from utils.embeddings import get_embedding
 from utils.supabase import match_documents
