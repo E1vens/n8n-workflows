@@ -1,20 +1,19 @@
 from fastapi import FastAPI, Request
+from config import TELEGRAM_API_URL
 from fastapi.concurrency import run_in_threadpool
 from utils.embeddings import get_embedding
-from utils.supabase import match_documents, match_documents_by_category
+from utils.supabase import match_documents
 from handlers.ai import is_ai_active, activate_ai, deactivate_ai
+from handlers.age import handle_age_confirmation, is_confirmed, get_age_keyboard
+from handlers.catalog import handle_category_selection
 from handlers.buttons import (
-    get_age_confirmation_buttons,
     get_main_menu,
     get_category_buttons,
     get_ai_exit_button
 )
-from config import TELEGRAM_API_URL
 import httpx
-import re
 
 app = FastAPI()
-confirmed_users = set()
 
 
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
@@ -32,7 +31,6 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     data = await req.json()
-
     chat_id = None
     text = ""
 
@@ -47,24 +45,17 @@ async def telegram_webhook(req: Request):
     else:
         return {"ok": True}
 
-    # ✅ Обработка подтверждения возраста
+    # ✅ Обработка возраста
     if text.startswith("age:"):
-        if text == "age:yes":
-            confirmed_users.add(chat_id)
-            await send_message(chat_id, "✅ Спасибо! Меню доступно:", get_main_menu())
-        else:
-            await send_message(chat_id, "🚫 Доступ запрещён. Повторите /start, если вам уже исполнилось 18.")
-        return {"ok": True}
+        return await handle_age_confirmation(chat_id, text, send_message)
 
-    # ✅ Команда /start
     if text.lower() in ["/start", "старт"]:
-        return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
+        return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_keyboard())
 
-    # ✅ Проверка возраста
-    if chat_id not in confirmed_users:
+    if not is_confirmed(chat_id):
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
-    # ✅ Обработка нижнего меню
+    # ✅ Обработка текстовых кнопок
     if text == "🏍 Каталог":
         return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
 
@@ -85,37 +76,10 @@ async def telegram_webhook(req: Request):
     if text == "🎁 Карта лояльности":
         return await send_message(chat_id, "🔖 Карта лояльности доступна в магазине. Оформим при покупке.")
 
-    # ✅ Обработка inline-кнопок категорий
     if text.startswith("category:"):
-        match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\\d+))?", text)
-        if not match:
-            return await send_message(chat_id, "⚠️ Неверный формат категории.")
-        category = match.group("cat")
-        page = int(match.group("page") or 1)
+        return await handle_category_selection(chat_id, text, send_message)
 
-        results = await run_in_threadpool(match_documents_by_category, category, "asc", page, 10)
-        if not results:
-            return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
-
-        reply = "\n\n".join([
-            f"*{item.get('title', 'Без названия')}*\n"
-            f"Цена: {item.get('price', '?')}\u20bd • "
-            f"Объём: {item.get('volume', '?')} • "
-            f"Крепость: {item.get('strength', '?')}\n"
-            f"🔗 [Ссылка на товар]({item.get('product_url', '#')})"
-            for item in results
-        ])
-
-        next_page_btn = {
-            "inline_keyboard": [[{
-                "text": "➡️ Следующая страница",
-                "callback_data": f"category:{category}&page={page + 1}"
-            }]]
-        }
-
-        return await send_message(chat_id, reply, next_page_btn)
-
-    # ✅ Поиск по эмбеддингу (ИИ-консультант)
+    # ✅ ИИ-поиск
     if not is_ai_active(chat_id):
         return {"ok": True}
 
@@ -127,7 +91,7 @@ async def telegram_webhook(req: Request):
 
     reply = "\n\n".join([
         f"*{item['metadata'].get('title', 'Без названия')}*\n"
-        f"Цена: {item['metadata'].get('price', '?')}\u20bd • "
+        f"Цена: {item['metadata'].get('price', '?')}₽ • "
         f"Объём: {item['metadata'].get('volume', '?')} • "
         f"Крепость: {item['metadata'].get('strength', '?')}\n"
         f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#')})"
