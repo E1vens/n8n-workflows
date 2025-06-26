@@ -1,4 +1,3 @@
-print(f"▶️ handle_age_confirmation вызван с: chat_id={chat_id}, text={text}")
 from handlers.buttons import get_age_confirmation_buttons, get_main_menu
 
 confirmed_users = set()
