@@ -6,10 +6,14 @@ def is_confirmed(chat_id: int) -> bool:
     return chat_id in confirmed_users
 
 def confirm_user(chat_id: int):
+    print(f"✅ Пользователь {chat_id} подтвердил возраст")
     confirmed_users.add(chat_id)
 
 def handle_age_confirmation(chat_id: int, text: str):
-    if text == "age:yes":
+    cleaned = text.strip().lower()
+    print(f"📩 Обработка подтверждения возраста: chat_id={chat_id}, text='{text}'")
+    
+    if cleaned.startswith("age:yes"):
         confirm_user(chat_id)
         return {
             "text": "✅ Спасибо! Меню доступно:",
