@@ -53,6 +53,8 @@ async def telegram_webhook(req: Request):
         text = callback.get("data", "").strip()
         callback_id = callback["id"]
 
+        print(f"✅ НАЖАТА inline-кнопка: {text}")
+
         # Telegram требует подтверждение callback'а
         async with httpx.AsyncClient() as client:
             await client.post(
