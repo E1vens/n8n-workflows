@@ -1,16 +1,23 @@
 from fastapi import FastAPI, Request
-from fastapi.concurrency import run_in_threadpool
+from config import TELEGRAM_API_URL
 from utils.embeddings import get_embedding
-from utils.supabase import match_documents, match_documents_by_category
-from handlers.buttons import get_reply_markup, get_age_confirmation_buttons
-from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
+from utils.supabase import match_documents
+from handlers.age import (
+    request_age_confirmation,
+    handle_age_confirmation,
+    is_confirmed
+)
+from handlers.catalog import handle_category_selection
+from handlers.ai import is_ai_active, activate_ai, deactivate_ai
+from handlers.buttons import (
+    get_main_menu,
+    get_category_buttons,
+    get_ai_exit_button
+)
 import httpx
-import re
-
-print("✅ main.py успешно загружен")
 
 app = FastAPI()
-confirmed_users = set()
+
 
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
     payload = {
@@ -23,94 +30,97 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
     async with httpx.AsyncClient() as client:
         await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
+
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
-    try:
-        data = await req.json()
-    except Exception as e:
-        print("❌ Ошибка чтения запроса:", e)
-        return {"ok": False}
+    data = await req.json()
+    print("📥 ПОЛУЧЕНО:", data)
 
     chat_id = None
     text = ""
 
+    # ✅ Обработка обычных сообщений
     if "message" in data:
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "").strip()
+
+    # ✅ Обработка callback-кнопок
     elif "callback_query" in data:
         callback = data["callback_query"]
         chat_id = callback["from"]["id"]
         text = callback.get("data", "").strip()
-    else:
+        callback_id = callback["id"]
+
+        print(f"✅ НАЖАТА inline-кнопка: {text}")
+
+        # Подтверждение нажатия кнопки
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                f"{TELEGRAM_API_URL}/answerCallbackQuery",
+                json={"callback_query_id": callback_id}
+            )
+
+        # ✅ Обработка подтверждения возраста
+        if text.startswith("age:"):
+            resp = handle_age_confirmation(chat_id, text)
+            return await send_message(chat_id, resp["text"], resp.get("reply_markup"))
+
+        # Обработка inline-категорий
+        if text.startswith("category:"):
+            return await handle_category_selection(chat_id, text, send_message)
+
         return {"ok": True}
 
-    if not chat_id or not text:
-        return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
-
-    if text.startswith("age:"):
-        if text == "age:yes":
-            confirmed_users.add(chat_id)
-            return await send_message(chat_id, "✅ Спасибо! Вот доступные категории:", get_reply_markup())
-        else:
-            return await send_message(chat_id, "🚫 К сожалению, доступ запрещён. Повторно введите /start, если вам уже исполнилось 18.")
-
+    # ✅ /start
     if text.lower() in ["/start", "старт"]:
-        return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
+        response = request_age_confirmation()
+        return await send_message(chat_id, response["text"], response["reply_markup"])
 
-    if chat_id not in confirmed_users:
+    # ✅ Защита по возрасту
+    if not is_confirmed(chat_id):
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
+    # ✅ Главное меню
+    if text == "🛍 Каталог":
+        return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
+
     if text.startswith("category:"):
-        match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
-        if not match:
-            return await send_message(chat_id, "⚠️ Неверный формат категории.")
+        return await handle_category_selection(chat_id, text, send_message)
 
-        category = match.group("cat")
-        page = int(match.group("page") or 1)
+    if text == "🤖 ИИ консультант":
+        activate_ai(chat_id)
+        return await send_message(chat_id, "ИИ-консультант активирован. Задай свой вопрос:", get_ai_exit_button())
 
-        print(f"📦 Категория: {category} | Страница: {page}")
+    if text == "🔙 Выйти из ИИ":
+        deactivate_ai(chat_id)
+        return await send_message(chat_id, "ИИ-консультант отключён. Выберите действие из меню:", get_main_menu())
 
-        results = await run_in_threadpool(match_documents_by_category, category, "asc", page, 10)
+    if text == "ℹ️ Информация о товаре":
+        return await send_message(chat_id, "Отправьте название товара — я найду описание и характеристики.")
+
+    if text == "🌐 Выбрать язык":
+        return await send_message(chat_id, "Язык пока только русский. Скоро добавим другие!")
+
+    if text == "🎁 Карта лояльности":
+        return await send_message(chat_id, "🔖 Карта лояльности доступна в магазине. Оформим при покупке.")
+
+    # ✅ ИИ-поиск по эмбеддингу
+    if is_ai_active(chat_id):
+        embed = await get_embedding(text)
+        results = await match_documents(embed)
 
         if not results:
-            return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
+            return await send_message(chat_id, "Ничего не найдено. Попробуй переформулировать запрос.")
 
         reply = "\n\n".join([
-            f"*{item.get('title', 'Без названия')}*\n"
-            f"Цена: {item.get('price', '?')}₽ • "
-            f"Объём: {item.get('volume', '?')} • "
-            f"Крепость: {item.get('strength', '?')}\n"
-            f"🔗 [Ссылка на товар]({item.get('product_url', '#')})"
-            for item in results
+            f"*{item['metadata'].get('title', 'Без названия')}*\n"
+            f"Цена: {item['metadata'].get('price', '?')}₽ • "
+            f"Объём: {item['metadata'].get('volume', '?')} • "
+            f"Крепость: {item['metadata'].get('strength', '?')}\n"
+            f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#')})"
+            for item in results[:10]
         ])
+        return await send_message(chat_id, reply)
 
-        next_page_btn = {
-            "inline_keyboard": [[{
-                "text": "➡️ Следующая страница",
-                "callback_data": f"category:{category}&page={page + 1}"
-            }]]
-        }
-
-        return await send_message(chat_id, reply, next_page_btn)
-
-
-    embed = await get_embedding(text)
-    results = await match_documents(embed)
-
-    if not results:
-        return await send_message(chat_id, "К сожалению, ничего не найдено. Попробуйте другой запрос.")
-
-    reply = "\n\n".join([
-        f"*{item['metadata'].get('title', 'Без названия')}*\n"
-        f"Цена: {item['metadata'].get('price', '?')}₽ • "
-        f"Объём: {item['metadata'].get('volume', '?')} • "
-        f"Крепость: {item['metadata'].get('strength', '?')}\n"
-        f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#')})"
-        for item in results[:10]
-    ])
-
-    if len(results) > 10:
-        reply += f"\n\n_Показано 10 из {len(results)} результатов._"
-
-    return await send_message(chat_id, reply)
+    return {"ok": True}
