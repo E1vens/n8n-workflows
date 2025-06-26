@@ -54,7 +54,6 @@ async def telegram_webhook(req: Request):
 
         print(f"✅ НАЖАТА inline-кнопка: {text}")
 
-        # Подтверждение нажатия кнопки
         async with httpx.AsyncClient() as client:
             await client.post(
                 f"{TELEGRAM_API_URL}/answerCallbackQuery",
@@ -66,10 +65,14 @@ async def telegram_webhook(req: Request):
             resp = handle_age_confirmation(chat_id, text)
             return await send_message(chat_id, resp["text"], resp.get("reply_markup"))
 
-        # Обработка inline-категорий
+        # ✅ Обработка выбора категории
         if text.startswith("category:"):
             return await handle_category_selection(chat_id, text, send_message)
 
+        return {"ok": True}
+
+    # ✅ Проверка на наличие chat_id и текста
+    if not chat_id or not text:
         return {"ok": True}
 
     # ✅ /start
@@ -81,7 +84,7 @@ async def telegram_webhook(req: Request):
     if not is_confirmed(chat_id):
         return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
-    # ✅ Главное меню
+    # ✅ Главное меню и команды
     if text == "🛍 Каталог":
         return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
 
