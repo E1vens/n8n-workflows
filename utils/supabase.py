@@ -2,7 +2,7 @@ import requests
 from config import SUPABASE_URL, SUPABASE_KEY
 
 def get_distinct_categories():
-    url = f"{SUPABASE_URL}/rest/v1/documents?select=metadata->>category"
+    url = f"{SUPABASE_URL}/rest/v1/documents?select=category"
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}"
@@ -11,7 +11,7 @@ def get_distinct_categories():
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        raw_categories = [item.get("metadata", {}).get("category") for item in response.json()]
+        raw_categories = [item.get("category") for item in response.json()]
         categories = sorted(set(filter(None, raw_categories)))
         return categories
     except Exception as e:
@@ -28,15 +28,15 @@ def get_top_products_by_category(category: str, limit: int = 5):
     }
 
     params = {
-        "select": "metadata",
-        "metadata->>category": f"eq.{category}",
-        "order": "metadata->>price.asc"
+        "select": "*",
+        "category": f"eq.{category}",
+        "order": "price.asc"
     }
 
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        return [item["metadata"] for item in response.json()]
+        return response.json()
     except Exception as e:
         print(f"❌ Ошибка получения товаров по категории '{category}':", e)
         return []
@@ -51,15 +51,15 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
     }
 
     params = {
-        "select": "metadata",
-        "metadata->>category": f"eq.{category}",
-        "order": f"metadata->>price.{sort}"
+        "select": "*",
+        "category": f"eq.{category}",
+        "order": f"price.{sort}"
     }
 
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        return [item["metadata"] for item in response.json()]
+        return response.json()
     except Exception as e:
         print("❌ Supabase category error:", str(e))
         print("📦 Ответ Supabase:", response.text)
