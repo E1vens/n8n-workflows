@@ -1,36 +1,36 @@
-# handlers/catalog.py
-
 import re
-from utils.supabase import match_documents_by_category
+import re
 from fastapi.concurrency import run_in_threadpool
+from utils.supabase import get_distinct_categories, get_top_products_by_category
 
 
-async def handle_category_selection(chat_id: int, text: str, send_message):
-    match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
-    if not match:
-        return await send_message(chat_id, "⚠️ Неверный формат категории.")
+async def handle_catalog_overview(chat_id: int, send_message):
+    categories = await run_in_threadpool(get_distinct_categories)
+    if not categories:
+        return await send_message(chat_id, "⚠️ Категории не найдены.")
 
-    category = match.group("cat")
-    page = int(match.group("page") or 1)
+    message_parts = []
 
-    results = await run_in_threadpool(match_documents_by_category, category, "asc", page, 10)
-    if not results:
-        return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
+    for cat in categories:
+        items = await run_in_threadpool(get_top_products_by_category, cat, 5)
+        if not items:
+            continue
 
-    reply = "\n\n".join([
-        f"*{item.get('title', 'Без названия')}*\n"
-        f"Цена: {item.get('price', '?')}\u20bd • "
-        f"Объём: {item.get('volume', '?')} • "
-        f"Крепость: {item.get('strength', '?')}\n"
-        f"🔗 [Ссылка на товар]({item.get('product_url', '#')})"
-        for item in results
-    ])
+        section = f"📦 *{cat.strip().capitalize()}*\n"
+        for item in items:
+            section += (
+                f"• *{item.get('title', 'Без названия')}*\n"
+                f"  Цена: {item.get('price', '?')}₽ • "
+                f"Объём: {item.get('volume', '?')} • "
+                f"Крепость: {item.get('strength', '?')}\n"
+                f"  [📸 Фото]({item.get('image_url', '#')}) • [🔗 Товар]({item.get('product_url', '#')})\n\n"
+            )
+        message_parts.append(section)
 
-    next_page_btn = {
-        "inline_keyboard": [[{
-            "text": "➡️ Следующая страница",
-            "callback_data": f"category:{category}&page={page + 1}"
-        }]]
-    }
+    full_message = "\n".join(message_parts)
 
-    return await send_message(chat_id, reply, next_page_btn)
+    # ⚠️ Ограничим длину сообщения, чтобы Telegram не выдал ошибку
+    if len(full_message) > 4000:
+        full_message = full_message[:3900] + "\n...\n_Каталог был обрезан из-за длины._"
+
+    return await send_message(chat_id, full_message.strip())
