@@ -32,9 +32,9 @@ def get_category_buttons():
 # ✅ Главное меню (reply-кнопки)
 def get_main_menu():
     keyboard = [
-        [KeyboardButton("🛍 Каталог"), KeyboardButton("🤖 ИИ консультант")],
-        [KeyboardButton("ℹ️ Информация о товаре"), KeyboardButton("🌐 Выбрать язык")],
-        [KeyboardButton("🎁 Карта лояльности")]
+        [KeyboardButton("🛍 Каталог"), KeyboardButton("👑 Элитный алкоголь")],
+        [KeyboardButton("🤖 ИИ консультант"), KeyboardButton("ℹ️ Информация о компании и партнёрах")],
+        [KeyboardButton("🌐 Выбрать язык"), KeyboardButton("🎁 Карта лояльности")]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True).to_dict()
 
