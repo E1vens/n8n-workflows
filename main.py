@@ -3,7 +3,7 @@ from fastapi.concurrency import run_in_threadpool
 from utils.embeddings import get_embedding
 from handlers.age import handle_age_confirmation, is_confirmed, request_age_confirmation
 from utils.supabase import match_documents, match_documents_by_category
-from handlers.buttons import get_reply_markup, get_age_confirmation_buttons
+from handlers.buttons import get_main_menu, get_age_confirmation_buttons
 from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
 import httpx
 import re
@@ -11,7 +11,6 @@ import re
 print("✅ main.py успешно загружен")
 
 app = FastAPI()
-confirmed_users = set()
 
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
     payload = {
