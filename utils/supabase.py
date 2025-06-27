@@ -11,15 +11,15 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
     }
 
     params = {
-        "select": "*",
-        "category": f"eq.{category}",
-        "order": f"price.{sort}"
+        "select": "metadata",
+        "metadata->>category": f"eq.{category}",
+        "order": f"metadata->>price.{sort}"
     }
 
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        return response.json()
+        return [item["metadata"] for item in response.json()]
     except Exception as e:
         print("❌ Supabase category error:", str(e))
         print("📦 Ответ Supabase:", response.text)
