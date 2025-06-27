@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from utils.embeddings import get_embedding
+from handlers.age import handle_age_confirmation, is_confirmed, request_age_confirmation
 from utils.supabase import match_documents, match_documents_by_category
 from handlers.buttons import get_reply_markup, get_age_confirmation_buttons
 from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
@@ -49,17 +50,16 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
 
     if text.startswith("age:"):
-        if text == "age:yes":
-            confirmed_users.add(chat_id)
-            return await send_message(chat_id, "✅ Спасибо! Вот доступные категории:", get_reply_markup())
-        else:
-            return await send_message(chat_id, "🚫 К сожалению, доступ запрещён. Повторно введите /start, если вам уже исполнилось 18.")
+        result = handle_age_confirmation(chat_id, text)
+        return await send_message(chat_id, result["text"], result.get("reply_markup"))
+
 
     if text.lower() in ["/start", "старт"]:
         return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
 
-    if chat_id not in confirmed_users:
-        return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
+    if not is_confirmed(chat_id):
+        result = request_age_confirmation()
+        return await send_message(chat_id, result["text"], result.get("reply_markup"))
 
     if text.startswith("category:"):
         match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
