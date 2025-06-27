@@ -3,6 +3,7 @@ from fastapi.concurrency import run_in_threadpool
 from utils.embeddings import get_embedding
 from handlers.age import handle_age_confirmation, is_confirmed, request_age_confirmation
 from utils.supabase import match_documents, match_documents_by_category
+from handlers.catalog import handle_catalog_overview
 from handlers.buttons import get_main_menu, get_age_confirmation_buttons, get_category_buttons
 from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
 import httpx
@@ -61,7 +62,7 @@ async def telegram_webhook(req: Request):
 
     # 👇 Обработка reply-кнопок меню
     if text == "🛍 Каталог":
-        return await send_message(chat_id, "Выберите категорию товара:", get_category_buttons())
+        return await handle_catalog_overview(chat_id, send_message)
 
     if text == "👑 Элитный алкоголь":
         results = await run_in_threadpool(match_documents_by_category, "Элитный", "desc", 1, 10)
