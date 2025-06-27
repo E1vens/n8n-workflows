@@ -125,8 +125,8 @@ async def telegram_webhook(req: Request):
         response = request_age_confirmation()
         return await send_message(chat_id, response["text"], response["reply_markup"])
 
-    if not is_confirmed(chat_id):
-        return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
+    #if not is_confirmed(chat_id):
+     #   return await send_message(chat_id, "🚫 Доступ запрещён. Нажмите /start и подтвердите возраст.")
 
     if text == "🛍 Каталог":
         return await send_message(chat_id, "Выберите категорию:", get_category_buttons())
