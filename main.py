@@ -109,8 +109,9 @@ async def telegram_webhook(req: Request):
             )
 
         if text.startswith("age:"):
-            resp = handle_age_confirmation(chat_id, text)
-            return await send_message(chat_id, resp["text"], resp.get("reply_markup"))
+            print(f"🧪 ВРЕМЕННЫЙ ответ на age-кнопку: {text}")
+            return await send_message(chat_id, "✅ Спасибо за подтверждение возраста.")
+            
 
         if text.startswith("category:"):
             return await send_message(chat_id, f"Вы выбрали категорию: {text.split(':', 1)[1]}")
