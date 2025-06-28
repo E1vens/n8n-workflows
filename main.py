@@ -14,16 +14,25 @@ print("✅ main.py успешно загружен")
 
 app = FastAPI()
 
-async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "Markdown"
-    }
-    if reply_markup:
-        payload["reply_markup"] = reply_markup
+async def send_message(chat_id: int, text: str, reply_markup: dict | None = None, photo: str | None = None):
     async with httpx.AsyncClient() as client:
-        await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
+        if photo:
+            payload = {
+                "chat_id": chat_id,
+                "caption": text,
+                "photo": photo,
+                "parse_mode": "Markdown"
+            }
+            await client.post(f"{TELEGRAM_API_URL}/sendPhoto", json=payload)
+        else:
+            payload = {
+                "chat_id": chat_id,
+                "text": text,
+                "parse_mode": "Markdown"
+            }
+            if reply_markup:
+                payload["reply_markup"] = reply_markup
+            await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
