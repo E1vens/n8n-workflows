@@ -54,6 +54,7 @@ async def telegram_webhook(req: Request):
         callback = data["callback_query"]
         chat_id = callback["from"]["id"]
         text = callback.get("data", "").strip()
+        print(f"📩 Получено сообщение: {text}")
 
         if text.startswith("category|"):
             try:
