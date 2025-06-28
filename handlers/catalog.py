@@ -1,23 +1,21 @@
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from fastapi.concurrency import run_in_threadpool
-from utils.supabase import get_distinct_categories, get_top_products_by_category
-from math import ceil
-from urllib.parse import quote
-
-PAGE_SIZE = 5  # Показываем 5 товаров на странице
+from utils.supabase import get_distinct_categories
 
 async def handle_catalog_overview(chat_id: int, send_message):
     categories = await run_in_threadpool(get_distinct_categories)
+    print("📦 Категории:", categories)
+
     if not categories:
         return await send_message(chat_id, "⚠️ Категории не найдены.")
 
-    print("📦 Категории:", categories)  # ✅ добавь для логов
-
-    buttons = [
+    keyboard = [
         [InlineKeyboardButton(cat, callback_data=f"category|{quote(cat)}|1")]
         for cat in categories
     ]
-    reply_markup = InlineKeyboardMarkup(buttons).to_dict()
+    
+    # 🔧 ВАЖНО: используем .to_dict() от InlineKeyboardMarkup
+    reply_markup = InlineKeyboardMarkup(keyboard).to_dict()
 
     return await send_message(chat_id, "Выберите категорию:", reply_markup=reply_markup)
 
