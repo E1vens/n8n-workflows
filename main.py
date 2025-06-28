@@ -32,7 +32,7 @@ async def telegram_webhook(req: Request):
     print(f"📩 Получено сообщение: {text}")
 
     if text == "🛍 Каталог":
-        categories = await run_in_threadpool(get_distinct_categories)
+        return await handle_catalog_overview(chat_id, send_message)
         if not categories:
             return await send_message(chat_id, "⚠️ Категории не найдены.")
         reply = "Категории:\n" + "\n".join(f"• {c}" for c in categories)
