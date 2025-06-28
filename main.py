@@ -70,10 +70,6 @@ async def telegram_webhook(req: Request):
         if text == "catalog_back":
             return await send_message(chat_id, "Выберите категорию товара:", reply_markup=get_category_buttons())
 
-        if text == "🍭 Каталог":
-            return await handle_catalog_overview(chat_id, send_message)
-
-    else:
         return {"ok": True}
 
     if not chat_id or not text:
@@ -91,7 +87,7 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, result["text"], result.get("reply_markup"))
 
     if text == "🍭 Каталог":
-        return await handle_catalog_overview(chat_id, send_message)
+        return await send_message(chat_id, "Выберите категорию товара:", reply_markup=get_category_buttons())
 
     if text == "👑 Элитный алкоголь":
         results = await run_in_threadpool(match_documents_by_category, "Элитный", "desc", 1, 10)
@@ -136,6 +132,6 @@ async def telegram_webhook(req: Request):
     ])
 
     if len(results) > 10:
-        reply += f"\n\n_\u041f\u043e\u043a\u0430\u0437\u0430\u043d\u043e 10 \u0438\u0437 {len(results)} \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u043e\u0432._"
+        reply += f"\n\n_Показано 10 из {len(results)} результатов._"
 
     return await send_message(chat_id, reply)
