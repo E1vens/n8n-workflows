@@ -49,6 +49,7 @@ async def telegram_webhook(req: Request):
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "").strip()
+        print(f"📩 Получено сообщение от пользователя {chat_id}: {text}")
 
     elif "callback_query" in data:
         callback = data["callback_query"]
