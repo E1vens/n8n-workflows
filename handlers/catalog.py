@@ -1,62 +1,54 @@
-from fastapi import FastAPI, Request
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from fastapi.concurrency import run_in_threadpool
-from config import TELEGRAM_API_URL
-from urllib.parse import unquote
-import httpx
+from utils.supabase import get_distinct_categories, get_top_products_by_category
+from urllib.parse import quote
+from math import ceil
 
-print("✅ Минимальный main.py загружен")
+PAGE_SIZE = 5
 
-app = FastAPI()
+async def handle_catalog_overview(chat_id: int, send_message):
+    categories = await run_in_threadpool(get_distinct_categories)
+    if not categories:
+        return await send_message(chat_id, "⚠️ Категории не найдены.")
 
-# 🔹 Отправка сообщения
-async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "Markdown"
-    }
-    if reply_markup:
-        payload["reply_markup"] = reply_markup
+    keyboard = [
+        [InlineKeyboardButton(text=cat, callback_data=f"category|{quote(cat)}|1")]
+        for cat in categories
+    ]
+    markup = InlineKeyboardMarkup(keyboard).to_dict()
+    return await send_message(chat_id, "📦 Выберите категорию:", reply_markup=markup)
 
-    async with httpx.AsyncClient() as client:
-        await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
-# 🔹 Обработка запросов от Telegram
-@app.post("/webhook")
-async def telegram_webhook(req: Request):
-    data = await req.json()
-    chat_id = None
-    text = ""
+async def handle_category_selection(chat_id: int, category: str, send_message, page: int = 1):
+    all_products = await run_in_threadpool(get_top_products_by_category, category)
+    if not all_products:
+        return await send_message(chat_id, f"⚠️ Товары категории '{category}' не найдены.")
 
-    # Обработка обычного сообщения
-    if "message" in data:
-        message = data["message"]
-        chat_id = message["chat"]["id"]
-        text = message.get("text", "").strip()
-        print(f"📩 Сообщение: {text}")
+    total_pages = ceil(len(all_products) / PAGE_SIZE)
+    page = max(1, min(page, total_pages))
+    start = (page - 1) * PAGE_SIZE
+    end = start + PAGE_SIZE
+    page_products = all_products[start:end]
 
-        if text == "🛍 Каталог":
-            return await handle_catalog_overview(chat_id, send_message)
+    for product in page_products:
+        text = (
+            f"*{product.get('title', 'Без названия')}*\n"
+            f"Цена: {product.get('price', '?')}₽\n"
+            f"Объём: {product.get('volume', '?')} • "
+            f"Крепость: {product.get('strength', '?')}\n"
+            f"[🔗 Открыть товар]({product.get('product_url', '#')})"
+        )
+        await send_message(chat_id, text, reply_markup=None)
 
-        return await send_message(chat_id, "Нажмите 🛍 Каталог для теста.")
+    # Кнопки навигации
+    nav_buttons = []
+    if page > 1:
+        nav_buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"category|{quote(category)}|{page - 1}"))
+    if page < total_pages:
+        nav_buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"category|{quote(category)}|{page + 1}"))
 
-    # Обработка нажатий на кнопки (callback_query)
-    elif "callback_query" in data:
-        callback = data["callback_query"]
-        chat_id = callback["from"]["id"]
-        text = callback.get("data", "").strip()
-        print(f"📥 Callback: {text}")
-
-        if text.startswith("category|"):
-            try:
-                _, raw_category, page = text.split("|")
-                category = unquote(raw_category)
-                return await send_message(chat_id, f"✅ Вы выбрали категорию: *{category}* (страница {page})")
-            except Exception as e:
-                print(f"❌ Ошибка разбора callback: {e}")
-                return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
-
-        return await send_message(chat_id, "⚠️ Неизвестная команда в callback.")
-
-    # Остальные случаи
-    return {"ok": True}
+    if nav_buttons:
+        reply_markup = InlineKeyboardMarkup([nav_buttons]).to_dict()
+        return await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=reply_markup)
+    else:
+        return await send_message(chat_id, f"Страница {page}/{total_pages}")
