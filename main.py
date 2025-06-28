@@ -14,25 +14,16 @@ print("✅ main.py успешно загружен")
 
 app = FastAPI()
 
-async def send_message(chat_id: int, text: str, reply_markup: dict | None = None, photo: str | None = None):
+async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "Markdown"
+    }
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
     async with httpx.AsyncClient() as client:
-        if photo:
-            payload = {
-                "chat_id": chat_id,
-                "caption": text,
-                "photo": photo,
-                "parse_mode": "Markdown"
-            }
-            await client.post(f"{TELEGRAM_API_URL}/sendPhoto", json=payload)
-        else:
-            payload = {
-                "chat_id": chat_id,
-                "text": text,
-                "parse_mode": "Markdown"
-            }
-            if reply_markup:
-                payload["reply_markup"] = reply_markup
-            await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
+        await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
@@ -49,14 +40,13 @@ async def telegram_webhook(req: Request):
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "").strip()
-        print(f"📩 Получено сообщение от пользователя {chat_id}: {text}")
 
     elif "callback_query" in data:
         callback = data["callback_query"]
         chat_id = callback["from"]["id"]
         text = callback.get("data", "").strip()
-        print(f"📩 Получено сообщение: {text}")
 
+        # 👇 Поддержка кнопок с форматами category|<категория>|<страница>
         if text.startswith("category|"):
             try:
                 _, raw_category, page = text.split("|")
@@ -69,6 +59,7 @@ async def telegram_webhook(req: Request):
                 print("❌ Ошибка category| обработчика:", e)
                 return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
 
+        # 👇 Возврат в каталог
         if text == "🛍 Каталог":
             return await handle_catalog_overview(chat_id, send_message)
 
@@ -90,7 +81,8 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, result["text"], result.get("reply_markup"))
 
     if text == "🛍 Каталог":
-        return await handle_catalog_overview(chat_id, send_message)
+        return await send_message(chat_id, "Выберите категорию товара:", get_category_buttons())
+
     if text == "👑 Элитный алкоголь":
         results = await run_in_threadpool(match_documents_by_category, "Элитный", "desc", 1, 10)
         if not results:
@@ -118,6 +110,38 @@ async def telegram_webhook(req: Request):
     if text == "🎁 Карта лояльности":
         return await send_message(chat_id, "🎁 Скоро появится карта лояльности. Следите за новостями!")
 
+    if text.startswith("category:"):
+        match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
+        if not match:
+            return await send_message(chat_id, "⚠️ Неверный формат категории.")
+
+        category = match.group("cat")
+        page = int(match.group("page") or 1)
+
+        print(f"📦 Категория: {category} | Страница: {page}")
+
+        results = await run_in_threadpool(match_documents_by_category, category, "asc", page, 10)
+        if not results:
+            return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
+
+        reply = "\n\n".join([
+            f"*{item.get('title', 'Без названия')}*\n"
+            f"Цена: {item.get('price', '?')}₽ • "
+            f"Объём: {item.get('volume', '?')} • "
+            f"Крепость: {item.get('strength', '?')}\n"
+            f"🔗 [Ссылка на товар]({item.get('product_url', '#')})"
+            for item in results
+        ])
+
+        next_page_btn = {
+            "inline_keyboard": [[{
+                "text": "➡️ Следующая страница",
+                "callback_data": f"category:{category}&page={page + 1}"
+            }]]
+        }
+
+        return await send_message(chat_id, reply, next_page_btn)
+
     embed = await get_embedding(text)
     results = await match_documents(embed)
 
@@ -137,4 +161,3 @@ async def telegram_webhook(req: Request):
         reply += f"\n\n_Показано 10 из {len(results)} результатов._"
 
     return await send_message(chat_id, reply)
-
