@@ -2,6 +2,7 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from fastapi.concurrency import run_in_threadpool
 from utils.supabase import get_distinct_categories, get_top_products_by_category
 from math import ceil
+from urllib.parse import quote
 
 PAGE_SIZE = 5  # Показываем 5 товаров на странице
 
@@ -60,9 +61,9 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
     # 🔘 Кнопки навигации
     buttons = []
     if page > 1:
-        buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"{category}|{page - 1}"))
+        buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"{quote(category)}|{page - 1}"))
     if page < total_pages:
-        buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"{category}|{page + 1}"))
+        buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"{quote(category)}|{page + 1}"))
     buttons.append(InlineKeyboardButton("🔙 Назад в каталог", callback_data="🛍 Каталог"))
 
     reply_markup = InlineKeyboardMarkup([buttons])
