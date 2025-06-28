@@ -3,7 +3,7 @@ from fastapi.concurrency import run_in_threadpool
 from utils.embeddings import get_embedding
 from handlers.age import handle_age_confirmation, is_confirmed, request_age_confirmation
 from utils.supabase import match_documents, match_documents_by_category
-from handlers.catalog import handle_catalog_overview
+from handlers.catalog import handle_catalog_overview, handle_category_selection
 from handlers.buttons import get_main_menu, get_age_confirmation_buttons, get_category_buttons
 from config import TELEGRAM_TOKEN, TELEGRAM_API_URL
 import httpx
@@ -39,10 +39,23 @@ async def telegram_webhook(req: Request):
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "").strip()
+
     elif "callback_query" in data:
         callback = data["callback_query"]
         chat_id = callback["from"]["id"]
         text = callback.get("data", "").strip()
+
+        if text.startswith("category|"):
+            try:
+                _, category, page = text.split("|")
+                return await handle_category_selection(chat_id, category, send_message, int(page))
+            except Exception as e:
+                print("❌ Ошибка category| обработчика:", e)
+                return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
+
+        if text == "🛍 Каталог":
+            return await handle_catalog_overview(chat_id, send_message, 1)
+
     else:
         return {"ok": True}
 
@@ -60,11 +73,8 @@ async def telegram_webhook(req: Request):
         result = request_age_confirmation()
         return await send_message(chat_id, result["text"], result.get("reply_markup"))
 
-    # 👇 Обработка reply-кнопок меню
     if text == "🛍 Каталог":
-        from handlers.buttons import get_category_buttons
         return await send_message(chat_id, "Выберите категорию товара:", get_category_buttons())
-
 
     if text == "👑 Элитный алкоголь":
         results = await run_in_threadpool(match_documents_by_category, "Элитный", "desc", 1, 10)
@@ -93,7 +103,6 @@ async def telegram_webhook(req: Request):
     if text == "🎁 Карта лояльности":
         return await send_message(chat_id, "🎁 Скоро появится карта лояльности. Следите за новостями!")
 
-    # 👇 Обработка inline-кнопок категорий
     if text.startswith("category:"):
         match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
         if not match:
@@ -126,7 +135,6 @@ async def telegram_webhook(req: Request):
 
         return await send_message(chat_id, reply, next_page_btn)
 
-    # 👇 Поиск по смыслу
     embed = await get_embedding(text)
     results = await match_documents(embed)
 
