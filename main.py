@@ -45,15 +45,19 @@ async def telegram_webhook(req: Request):
         chat_id = callback["from"]["id"]
         text = callback.get("data", "").strip()
 
+        # 👇 Поддержка кнопок с форматами category|<категория>|<страница>
         if text.startswith("category|"):
             try:
                 _, category, page = text.split("|")
+                from handlers.catalog import handle_category_selection
                 return await handle_category_selection(chat_id, category, send_message, int(page))
             except Exception as e:
                 print("❌ Ошибка category| обработчика:", e)
                 return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
 
+        # 👇 Возврат в каталог
         if text == "🛍 Каталог":
+            from handlers.catalog import handle_catalog_overview
             return await handle_catalog_overview(chat_id, send_message, 1)
 
     else:
@@ -65,6 +69,7 @@ async def telegram_webhook(req: Request):
     if text.startswith("age:"):
         result = handle_age_confirmation(chat_id, text)
         return await send_message(chat_id, result["text"], result.get("reply_markup"))
+
 
     if text.lower() in ["/start", "старт"]:
         return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
