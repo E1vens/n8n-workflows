@@ -22,6 +22,13 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
                 payload["reply_markup"] = reply_markup
             await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
+    if text == "/start" or text.lower() == "старт":
+        return await send_message(chat_id, "Нажмите 🛍 Каталог для теста.", get_main_menu())
+
+    if text == "🛍 Каталог":
+        return await handle_catalog_overview(chat_id, send_message)
+
+
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     data = await req.json()
