@@ -71,9 +71,9 @@ async def telegram_webhook(req: Request):
                 print("❌ Ошибка category| обработчика:", e)
                 return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
 
-        # 👇 Возврат в каталог
-        if text == "🛍 Каталог":
-            return await handle_catalog_overview(chat_id, send_message)
+        # 👇 Возврат в меню с категориями
+        if text == "catalog_back":
+            return await send_message(chat_id, "Выберите категорию товара:", reply_markup=get_category_buttons())
 
     else:
         return {"ok": True}
