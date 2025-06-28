@@ -24,10 +24,10 @@ def get_category_buttons():
         "Другие"
     ]
     keyboard = [
-        [InlineKeyboardButton(text=title, callback_data=f"category:{title}")]
+        [InlineKeyboardButton(text=title, callback_data=f"category|{title}|1")]
         for title in categories
     ]
-    return InlineKeyboardMarkup(keyboard).to_dict()  # ← ТОЖЕ .to_dict()
+    return InlineKeyboardMarkup(keyboard).to_dict()
 
 # ✅ Главное меню (reply-кнопки)
 def get_main_menu():
