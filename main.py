@@ -61,7 +61,7 @@ async def telegram_webhook(req: Request):
 
         # 👇 Возврат в каталог
         if text == "🛍 Каталог":
-            return await handle_catalog_overview(chat_id, send_message, 1)
+            return await handle_catalog_overview(chat_id, send_message)
 
     else:
         return {"ok": True}
