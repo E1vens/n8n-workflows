@@ -15,7 +15,7 @@ async def handle_catalog_overview(chat_id: int, send_message):
         [InlineKeyboardButton(cat, callback_data=f"category|{quote(cat)}|1")]
         for cat in categories
     ]
-    reply_markup = InlineKeyboardMarkup(buttons).to_dict()
+    reply_markup = InlineKeyboardMarkup([buttons]).to_dict()
 
     return await send_message(chat_id, "Выберите категорию:", reply_markup=reply_markup)
 
@@ -47,7 +47,7 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
         buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"category|{quote(category)}|{page - 1}"))
     if page < total_pages:
         buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"category|{quote(category)}|{page + 1}"))
-    buttons.append(InlineKeyboardButton("🔙 Назад в каталог", callback_data="🛍 Каталог"))
+    buttons.append(InlineKeyboardButton("🔙 Назад в каталог", callback_data="catalog_back"))
 
     reply_markup = InlineKeyboardMarkup([buttons]).to_dict()
     return await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=reply_markup)
