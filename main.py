@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Request
-from fastapi.concurrency import run_in_threadpool
 from handlers.age import handle_age_confirmation, is_confirmed, request_age_confirmation
 from handlers.catalog import handle_catalog_overview, handle_category_selection
 from handlers.buttons import get_main_menu, get_age_confirmation_buttons, get_category_buttons
@@ -15,7 +14,8 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         "parse_mode": "Markdown"
     }
     if photo:
-        payload.update({"photo": photo, "caption": text})
+        payload["photo"] = photo
+        payload["caption"] = text
         method = "sendPhoto"
     else:
         payload["text"] = text
@@ -32,7 +32,6 @@ async def telegram_webhook(req: Request):
     chat_id = None
     text = ""
 
-    # 📩 Обработка текстовых сообщений
     if "message" in data:
         message = data["message"]
         chat_id = message["chat"]["id"]
@@ -45,7 +44,6 @@ async def telegram_webhook(req: Request):
             result = request_age_confirmation()
             return await send_message(chat_id, result["text"], result["reply_markup"])
 
-        # ✅ После подтверждения возраста — меню
         if text == "🛍 Каталог":
             return await handle_catalog_overview(chat_id, send_message)
 
@@ -63,7 +61,6 @@ async def telegram_webhook(req: Request):
 
         return await send_message(chat_id, "Нажмите 🛍 Каталог", get_main_menu())
 
-    # 📥 Обработка callback-кнопок
     elif "callback_query" in data:
         callback = data["callback_query"]
         chat_id = callback["from"]["id"]
@@ -79,7 +76,7 @@ async def telegram_webhook(req: Request):
                 category = unquote(raw_category)
                 return await handle_category_selection(chat_id, category, send_message, int(page))
             except Exception as e:
-                print("❌ Ошибка обработки категории:", e)
+                print("❌ Ошибка category-кнопки:", e)
                 return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
 
     return {"ok": True}
