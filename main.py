@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from utils.supabase import get_distinct_categories
-from handlers.catalog import handle_category_selection  # ← важно: импорт добавлен!
+from handlers.catalog import handle_category_selection, handle_catalog_overview
 from config import TELEGRAM_API_URL
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 from urllib.parse import unquote
