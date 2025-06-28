@@ -11,6 +11,8 @@ async def handle_catalog_overview(chat_id: int, send_message):
     if not categories:
         return await send_message(chat_id, "⚠️ Категории не найдены.")
 
+    print("📦 Категории:", categories)  # ✅ добавь для логов
+
     buttons = [
         [InlineKeyboardButton(cat, callback_data=f"category|{quote(cat)}|1")]
         for cat in categories
@@ -18,7 +20,6 @@ async def handle_catalog_overview(chat_id: int, send_message):
     reply_markup = InlineKeyboardMarkup(buttons).to_dict()
 
     return await send_message(chat_id, "Выберите категорию:", reply_markup=reply_markup)
-
 
 async def handle_category_selection(chat_id: int, category: str, send_message, page: int = 1):
     all_products = await run_in_threadpool(get_top_products_by_category, category)
