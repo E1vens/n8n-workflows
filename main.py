@@ -90,8 +90,7 @@ async def telegram_webhook(req: Request):
         return await send_message(chat_id, result["text"], result.get("reply_markup"))
 
     if text == "🛍 Каталог":
-        return await send_message(chat_id, "Выберите категорию товара:", reply_markup=get_category_buttons())
-
+        return await handle_catalog_overview(chat_id, send_message)
     if text == "👑 Элитный алкоголь":
         results = await run_in_threadpool(match_documents_by_category, "Элитный", "desc", 1, 10)
         if not results:
