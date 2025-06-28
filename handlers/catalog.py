@@ -1,6 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from fastapi.concurrency import run_in_threadpool
 from utils.supabase import get_distinct_categories
+from urllib.parse import quote
 
 async def handle_catalog_overview(chat_id: int, send_message):
     categories = await run_in_threadpool(get_distinct_categories)
