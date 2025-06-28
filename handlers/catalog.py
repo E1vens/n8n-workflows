@@ -66,5 +66,5 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
         buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"{quote(category)}|{page + 1}"))
     buttons.append(InlineKeyboardButton("🔙 Назад в каталог", callback_data="🛍 Каталог"))
 
-    reply_markup = InlineKeyboardMarkup([buttons])
+    reply_markup = InlineKeyboardMarkup([buttons]).to_dict()
     await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=reply_markup)
