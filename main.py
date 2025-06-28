@@ -58,6 +58,13 @@ async def telegram_webhook(req: Request):
         if not chat_id or not text:
             return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
 
+        # ✅ Возраст
+        if text.startswith("age:"):
+            print(f"📩 Обработка подтверждения возраста: chat_id={chat_id}, text='{text}'")
+            result = handle_age_confirmation(chat_id, text)
+            return await send_message(chat_id, result["text"], result.get("reply_markup"))
+
+        # ✅ Категории
         if text.startswith("category|"):
             try:
                 _, raw_category, page = text.split("|")
@@ -67,17 +74,15 @@ async def telegram_webhook(req: Request):
                 print("❌ Ошибка category| обработчика:", e)
                 return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
 
+        # ✅ Назад в меню
         if text == "catalog_back":
             return await send_message(chat_id, "Выберите категорию товара:", reply_markup=get_category_buttons())
 
+    else:
         return {"ok": True}
 
     if not chat_id or not text:
         return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
-
-    if text.startswith("age:"):
-        result = handle_age_confirmation(chat_id, text)
-        return await send_message(chat_id, result["text"], result.get("reply_markup"))
 
     if text.lower() in ["/start", "старт"]:
         return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
@@ -86,18 +91,17 @@ async def telegram_webhook(req: Request):
         result = request_age_confirmation()
         return await send_message(chat_id, result["text"], result.get("reply_markup"))
 
-    if text == "🍭 Каталог":
-        return await send_message(chat_id, "Выберите категорию товара:", reply_markup=get_category_buttons())
+    if text == "🛍 Каталог":
+        return await handle_catalog_overview(chat_id, send_message)
 
     if text == "👑 Элитный алкоголь":
         results = await run_in_threadpool(match_documents_by_category, "Элитный", "desc", 1, 10)
         if not results:
             return await send_message(chat_id, "Элитный алкоголь не найден.")
-
         reply = "\n\n".join([
             f"*{item.get('title', 'Без названия')}*\n"
-            f"Цена: {item.get('price', '?')}\u20bd • "
-            f"Объем: {item.get('volume', '?')} • "
+            f"Цена: {item.get('price', '?')}₽ • "
+            f"Объём: {item.get('volume', '?')} • "
             f"Крепость: {item.get('strength', '?')}\n"
             f"🔗 [Ссылка]({item.get('product_url', '#')})"
             for item in results
@@ -107,7 +111,7 @@ async def telegram_webhook(req: Request):
     if text == "🤖 ИИ консультант":
         return await send_message(chat_id, "🤖 ИИ-консультант пока в разработке. Ожидайте обновлений.")
 
-    if text == "ℹ️ Информация о компании и партёрах":
+    if text == "ℹ️ Информация о компании и партнёрах":
         return await send_message(chat_id, "Компания Veld21 работает с 2005 года. Сотрудничаем с поставщиками из Европы и СНГ.\n\n📧 info@veld21.ru\n🌐 https://veld21.ru")
 
     if text == "🌐 Выбрать язык":
@@ -116,6 +120,7 @@ async def telegram_webhook(req: Request):
     if text == "🎁 Карта лояльности":
         return await send_message(chat_id, "🎁 Скоро появится карта лояльности. Следите за новостями!")
 
+    # 🔍 Поиск по тексту
     embed = await get_embedding(text)
     results = await match_documents(embed)
 
@@ -124,13 +129,12 @@ async def telegram_webhook(req: Request):
 
     reply = "\n\n".join([
         f"*{item['metadata'].get('title', 'Без названия')}*\n"
-        f"Цена: {item['metadata'].get('price', '?')}\u20bd • "
-        f"Объем: {item['metadata'].get('volume', '?')} • "
+        f"Цена: {item['metadata'].get('price', '?')}₽ • "
+        f"Объём: {item['metadata'].get('volume', '?')} • "
         f"Крепость: {item['metadata'].get('strength', '?')}\n"
         f"🔗 [Ссылка]({item['metadata'].get('product_url', '#')})"
         for item in results[:10]
     ])
-
     if len(results) > 10:
         reply += f"\n\n_Показано 10 из {len(results)} результатов._"
 
