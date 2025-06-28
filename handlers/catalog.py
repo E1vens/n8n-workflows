@@ -61,10 +61,12 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
     # 🔘 Кнопки навигации
     buttons = []
     if page > 1:
-        buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"{quote(category)}|{page - 1}"))
+        buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"category|{quote(category)}|{page - 1}"))
     if page < total_pages:
-        buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"{quote(category)}|{page + 1}"))
-    buttons.append(InlineKeyboardButton("🔙 Назад в каталог", callback_data="🛍 Каталог"))
+        buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"category|{quote(category)}|{page + 1}"))
 
-    reply_markup = InlineKeyboardMarkup([buttons])
-    await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=reply_markup)
+    if buttons:
+        reply_markup = InlineKeyboardMarkup([buttons])
+        await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=reply_markup)
+    else:
+        await send_message(chat_id, f"Страница {page}/{total_pages}")
