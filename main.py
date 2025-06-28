@@ -50,7 +50,10 @@ async def telegram_webhook(req: Request):
         if text.startswith("category|"):
             try:
                 _, raw_category, page = text.split("|")
+                print(f"📥 Получено из кнопки: {text}")
+                print(f"➡️ raw_category = {raw_category}, page = {page}")
                 category = unquote(raw_category)
+                print(f"✅ Декодированная категория = {category}")
                 return await handle_category_selection(chat_id, category, send_message, int(page))
             except Exception as e:
                 print("❌ Ошибка category| обработчика:", e)
