@@ -58,22 +58,20 @@ async def telegram_webhook(req: Request):
         if not chat_id or not text:
             return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
 
-        # 👇 Поддержка кнопок с форматами category|<категория>|<страница>
         if text.startswith("category|"):
             try:
                 _, raw_category, page = text.split("|")
-                print(f"📥 Получено из кнопки: {text}")
-                print(f"➡️ raw_category = {raw_category}, page = {page}")
                 category = unquote(raw_category)
-                print(f"✅ Декодированная категория = {category}")
                 return await handle_category_selection(chat_id, category, send_message, int(page))
             except Exception as e:
                 print("❌ Ошибка category| обработчика:", e)
                 return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
 
-        # 👇 Возврат в меню с категориями
         if text == "catalog_back":
             return await send_message(chat_id, "Выберите категорию товара:", reply_markup=get_category_buttons())
+
+        if text == "🍭 Каталог":
+            return await handle_catalog_overview(chat_id, send_message)
 
     else:
         return {"ok": True}
@@ -92,8 +90,8 @@ async def telegram_webhook(req: Request):
         result = request_age_confirmation()
         return await send_message(chat_id, result["text"], result.get("reply_markup"))
 
-    if text == "🛍 Каталог":
-        return await send_message(chat_id, "Выберите категорию товара:", reply_markup=get_category_buttons())
+    if text == "🍭 Каталог":
+        return await handle_catalog_overview(chat_id, send_message)
 
     if text == "👑 Элитный алкоголь":
         results = await run_in_threadpool(match_documents_by_category, "Элитный", "desc", 1, 10)
@@ -102,10 +100,10 @@ async def telegram_webhook(req: Request):
 
         reply = "\n\n".join([
             f"*{item.get('title', 'Без названия')}*\n"
-            f"Цена: {item.get('price', '?')}₽ • "
-            f"Объём: {item.get('volume', '?')} • "
+            f"Цена: {item.get('price', '?')}\u20bd • "
+            f"Объем: {item.get('volume', '?')} • "
             f"Крепость: {item.get('strength', '?')}\n"
-            f"🔗 [Ссылка на товар]({item.get('product_url', '#')})"
+            f"🔗 [Ссылка]({item.get('product_url', '#')})"
             for item in results
         ])
         return await send_message(chat_id, reply)
@@ -113,7 +111,7 @@ async def telegram_webhook(req: Request):
     if text == "🤖 ИИ консультант":
         return await send_message(chat_id, "🤖 ИИ-консультант пока в разработке. Ожидайте обновлений.")
 
-    if text == "ℹ️ Информация о компании и партнёрах":
+    if text == "ℹ️ Информация о компании и партёрах":
         return await send_message(chat_id, "Компания Veld21 работает с 2005 года. Сотрудничаем с поставщиками из Европы и СНГ.\n\n📧 info@veld21.ru\n🌐 https://veld21.ru")
 
     if text == "🌐 Выбрать язык":
@@ -121,38 +119,6 @@ async def telegram_webhook(req: Request):
 
     if text == "🎁 Карта лояльности":
         return await send_message(chat_id, "🎁 Скоро появится карта лояльности. Следите за новостями!")
-
-    if text.startswith("category:"):
-        match = re.match(r"category:(?P<cat>[^&]+)(?:&page=(?P<page>\d+))?", text)
-        if not match:
-            return await send_message(chat_id, "⚠️ Неверный формат категории.")
-
-        category = match.group("cat")
-        page = int(match.group("page") or 1)
-
-        print(f"📦 Категория: {category} | Страница: {page}")
-
-        results = await run_in_threadpool(match_documents_by_category, category, "asc", page, 10)
-        if not results:
-            return await send_message(chat_id, f"В категории *{category}* ничего не найдено.")
-
-        reply = "\n\n".join([
-            f"*{item.get('title', 'Без названия')}*\n"
-            f"Цена: {item.get('price', '?')}₽ • "
-            f"Объём: {item.get('volume', '?')} • "
-            f"Крепость: {item.get('strength', '?')}\n"
-            f"🔗 [Ссылка на товар]({item.get('product_url', '#')})"
-            for item in results
-        ])
-
-        next_page_btn = {
-            "inline_keyboard": [[{
-                "text": "➡️ Следующая страница",
-                "callback_data": f"category:{category}&page={page + 1}"
-            }]]
-        }
-
-        return await send_message(chat_id, reply, next_page_btn)
 
     embed = await get_embedding(text)
     results = await match_documents(embed)
@@ -162,14 +128,14 @@ async def telegram_webhook(req: Request):
 
     reply = "\n\n".join([
         f"*{item['metadata'].get('title', 'Без названия')}*\n"
-        f"Цена: {item['metadata'].get('price', '?')}₽ • "
-        f"Объём: {item['metadata'].get('volume', '?')} • "
+        f"Цена: {item['metadata'].get('price', '?')}\u20bd • "
+        f"Объем: {item['metadata'].get('volume', '?')} • "
         f"Крепость: {item['metadata'].get('strength', '?')}\n"
-        f"🔗 [Ссылка на товар]({item['metadata'].get('product_url', '#')})"
+        f"🔗 [Ссылка]({item['metadata'].get('product_url', '#')})"
         for item in results[:10]
     ])
 
     if len(results) > 10:
-        reply += f"\n\n_Показано 10 из {len(results)} результатов._"
+        reply += f"\n\n_\u041f\u043e\u043a\u0430\u0437\u0430\u043d\u043e 10 \u0438\u0437 {len(results)} \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u043e\u0432._"
 
     return await send_message(chat_id, reply)
