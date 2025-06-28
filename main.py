@@ -55,6 +55,9 @@ async def telegram_webhook(req: Request):
         chat_id = callback["from"]["id"]
         text = callback.get("data", "").strip()
 
+        if not chat_id or not text:
+            return await send_message(chat_id, "⚠️ Сообщение не распознано. Повторите ввод.")
+
         # 👇 Поддержка кнопок с форматами category|<категория>|<страница>
         if text.startswith("category|"):
             try:
