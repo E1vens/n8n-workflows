@@ -36,9 +36,9 @@ async def telegram_webhook(req: Request):
         print(f"📩 Сообщение: {text}")
 
         if text == "🛍 Каталог":
-            return await handle_catalog_overview(chat_id, send_message)
+            return await handle_catalog_overview(chat_id, send_message)  # << вот это ОБЯЗАТЕЛЬНО выше
 
-        return await send_message(chat_id, "Нажмите 🛍 Каталог для теста.")
+        return await send_message(chat_id, "Нажмите 🛍 Каталог для теста.")  # << иначе всегда сюда
 
     elif "callback_query" in data:
         callback = data["callback_query"]
