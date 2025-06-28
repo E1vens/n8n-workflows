@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
-from handlers.catalog import handle_catalog_overview
 from config import TELEGRAM_API_URL
 from urllib.parse import unquote
 import httpx
