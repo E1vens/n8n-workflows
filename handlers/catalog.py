@@ -1,24 +1,10 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from math import ceil
 from fastapi.concurrency import run_in_threadpool
-from utils.supabase import get_distinct_categories
+from utils.supabase import get_top_products_by_category
 from urllib.parse import quote
 
-async def handle_catalog_overview(chat_id: int, send_message):
-    categories = await run_in_threadpool(get_distinct_categories)
-    print("📦 Категории:", categories)
-
-    if not categories:
-        return await send_message(chat_id, "⚠️ Категории не найдены.")
-
-    keyboard = [
-        [InlineKeyboardButton(cat, callback_data=f"category|{quote(cat)}|1")]
-        for cat in categories
-    ]
-    
-    # 🔧 ВАЖНО: используем .to_dict() от InlineKeyboardMarkup
-    reply_markup = InlineKeyboardMarkup(keyboard).to_dict()
-
-    return await send_message(chat_id, "Выберите категорию:", reply_markup=reply_markup)
+PAGE_SIZE = 5
 
 async def handle_category_selection(chat_id: int, category: str, send_message, page: int = 1):
     all_products = await run_in_threadpool(get_top_products_by_category, category)
@@ -41,13 +27,15 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
         )
         await send_message(chat_id, text, reply_markup=None, photo=product.get('image_url'))
 
-    # 🔘 Кнопки навигации
-    buttons = []
+    # 🔘 Только кнопки навигации (без кнопки назад)
+    nav_buttons = []
     if page > 1:
-        buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"category|{quote(category)}|{page - 1}"))
+        nav_buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"category|{quote(category)}|{page - 1}"))
     if page < total_pages:
-        buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"category|{quote(category)}|{page + 1}"))
-    buttons.append(InlineKeyboardButton("🔙 Назад в каталог", callback_data="catalog_back"))
+        nav_buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"category|{quote(category)}|{page + 1}"))
 
-    reply_markup = InlineKeyboardMarkup([buttons]).to_dict()
-    return await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=reply_markup)
+    if nav_buttons:
+        reply_markup = InlineKeyboardMarkup([nav_buttons])
+        return await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=reply_markup)
+    else:
+        return await send_message(chat_id, f"Страница {page}/{total_pages}")
