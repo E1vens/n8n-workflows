@@ -1,7 +1,5 @@
 from fastapi import FastAPI, Request
-from handlers.age import handle_age_confirmation, is_confirmed, request_age_confirmation
 from handlers.catalog import handle_catalog_overview, handle_category_selection
-from handlers.buttons import get_main_menu, get_age_confirmation_buttons, get_category_buttons
 from config import TELEGRAM_API_URL
 from urllib.parse import unquote
 import httpx
@@ -14,8 +12,7 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         "parse_mode": "Markdown"
     }
     if photo:
-        payload["photo"] = photo
-        payload["caption"] = text
+        payload.update({"photo": photo, "caption": text})
         method = "sendPhoto"
     else:
         payload["text"] = text
@@ -33,42 +30,17 @@ async def telegram_webhook(req: Request):
     text = ""
 
     if "message" in data:
-        message = data["message"]
-        chat_id = message["chat"]["id"]
-        text = message.get("text", "").strip()
-
-        if text == "/start" or text.lower() == "старт":
-            return await send_message(chat_id, "Подтвердите, пожалуйста, что вам есть 18 лет:", get_age_confirmation_buttons())
-
-        if not is_confirmed(chat_id):
-            result = request_age_confirmation()
-            return await send_message(chat_id, result["text"], result["reply_markup"])
+        chat_id = data["message"]["chat"]["id"]
+        text = data["message"].get("text", "").strip()
 
         if text == "🛍 Каталог":
             return await handle_catalog_overview(chat_id, send_message)
 
-        if text == "👑 Элитный алкоголь":
-            return await send_message(chat_id, "⚠️ Пока недоступно.")
-
-        if text == "ℹ️ Информация о компании и партнёрах":
-            return await send_message(chat_id, "Компания Veld21 работает с 2005 года.\n📧 info@veld21.ru\n🌐 https://veld21.ru")
-
-        if text == "🌐 Выбрать язык":
-            return await send_message(chat_id, "Пока доступен только русский 🇷🇺")
-
-        if text == "🎁 Карта лояльности":
-            return await send_message(chat_id, "🎁 Скоро появится карта лояльности. Следите за новостями!")
-
-        return await send_message(chat_id, "Нажмите 🛍 Каталог", get_main_menu())
+        return await send_message(chat_id, "Нажмите 🛍 Каталог")
 
     elif "callback_query" in data:
-        callback = data["callback_query"]
-        chat_id = callback["from"]["id"]
-        text = callback.get("data", "").strip()
-
-        if text.startswith("age:"):
-            result = handle_age_confirmation(chat_id, text)
-            return await send_message(chat_id, result["text"], result.get("reply_markup", get_main_menu()))
+        chat_id = data["callback_query"]["from"]["id"]
+        text = data["callback_query"].get("data", "").strip()
 
         if text.startswith("category|"):
             try:
@@ -76,7 +48,7 @@ async def telegram_webhook(req: Request):
                 category = unquote(raw_category)
                 return await handle_category_selection(chat_id, category, send_message, int(page))
             except Exception as e:
-                print("❌ Ошибка category-кнопки:", e)
-                return await send_message(chat_id, "⚠️ Ошибка обработки категории.")
+                print("❌ Ошибка обработки category callback:", e)
+                return await send_message(chat_id, "⚠️ Не удалось загрузить товары.")
 
     return {"ok": True}
