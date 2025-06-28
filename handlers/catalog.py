@@ -1,11 +1,25 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from math import ceil
 from fastapi.concurrency import run_in_threadpool
-from utils.supabase import get_top_products_by_category
+from utils.supabase import get_top_products_by_category, get_distinct_categories
 from urllib.parse import quote
 
-PAGE_SIZE = 5
+PAGE_SIZE = 5  # количество товаров на странице
 
+# ✅ Показывает список категорий (каталог)
+async def handle_catalog_overview(chat_id: int, send_message):
+    categories = await run_in_threadpool(get_distinct_categories)
+    if not categories:
+        return await send_message(chat_id, "⚠️ Категории не найдены.")
+
+    buttons = [
+        [InlineKeyboardButton(cat, callback_data=f"category|{quote(cat)}|1")]
+        for cat in categories
+    ]
+    reply_markup = InlineKeyboardMarkup(buttons)
+    return await send_message(chat_id, "Выберите категорию:", reply_markup=reply_markup)
+
+# ✅ Показывает товары выбранной категории постранично
 async def handle_category_selection(chat_id: int, category: str, send_message, page: int = 1):
     all_products = await run_in_threadpool(get_top_products_by_category, category)
     if not all_products:
@@ -27,7 +41,7 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
         )
         await send_message(chat_id, text, reply_markup=None, photo=product.get('image_url'))
 
-    # 🔘 Только кнопки навигации (без кнопки назад)
+    # 🔘 Кнопки навигации между страницами
     nav_buttons = []
     if page > 1:
         nav_buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"category|{quote(category)}|{page - 1}"))
