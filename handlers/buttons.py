@@ -1,4 +1,5 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from urllib.parse import quote
 
 # ✅ Кнопки подтверждения возраста (разделены по строкам)
 def get_age_confirmation_buttons():
@@ -24,7 +25,7 @@ def get_category_buttons():
         "Другие"
     ]
     keyboard = [
-        [InlineKeyboardButton(text=title, callback_data=f"category|{title}|1")]
+        [InlineKeyboardButton(text=title, callback_data=f"category|{quote(title)}|1")]
         for title in categories
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
