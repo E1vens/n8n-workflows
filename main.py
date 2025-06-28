@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from utils.supabase import get_distinct_categories
+from handlers.catalog import handle_category_selection  # ← важно: импорт добавлен!
 from config import TELEGRAM_API_URL
 from telegram import ReplyKeyboardMarkup, KeyboardButton
+from urllib.parse import unquote
 import httpx
 
 print("✅ Минимальный main.py загружен")
@@ -49,6 +51,19 @@ async def telegram_webhook(req: Request):
         message = data["message"]
         chat_id = message["chat"]["id"]
         text = message.get("text", "").strip()
+
+    elif "callback_query" in data:
+        callback = data["callback_query"]
+        chat_id = callback["from"]["id"]
+        text = callback.get("data", "").strip()
+
+        if text.startswith("category|"):
+            _, raw_category, page = text.split("|")
+            category = unquote(raw_category)
+            return await handle_category_selection(chat_id, category, send_message, int(page))
+
+        return await send_message(chat_id, "⚠️ Неизвестная команда.")
+
     else:
         return {"ok": True}
 
