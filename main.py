@@ -96,8 +96,8 @@ async def telegram_webhook(req: Request):
 
     if text == "👑 Элитный алкоголь":
         results = await run_in_threadpool(match_documents_by_category, "Элитный", "desc", 1, 10)
-        if not results:
-            return await send_message(chat_id, "Элитный алкоголь не найден.")
+        if text == "🛍 Каталог":
+            return await handle_catalog_overview(chat_id, send_message)
         reply = "\n\n".join([
             f"*{item.get('title', 'Без названия')}*\n"
             f"Цена: {item.get('price', '?')}₽ • "
