@@ -3,7 +3,7 @@ from fastapi.concurrency import run_in_threadpool
 from utils.supabase import get_distinct_categories, get_top_products_by_category
 from math import ceil
 
-PAGE_SIZE = 5
+PAGE_SIZE = 5  # Показываем 5 товаров на странице
 
 async def handle_catalog_overview(chat_id: int, send_message):
     categories = await run_in_threadpool(get_distinct_categories)
@@ -14,12 +14,11 @@ async def handle_catalog_overview(chat_id: int, send_message):
 
     for cat in categories:
         items = await run_in_threadpool(get_top_products_by_category, cat)
-
         if not items:
             continue
 
         section = f"📦 *{cat.strip().capitalize()}*\n"
-        for item in items[:5]:  # только первые 5 для превью
+        for item in items[:5]:  # только первые 5 товаров на главной
             section += (
                 f"• *{item.get('title', 'Без названия')}*\n"
                 f"  Цена: {item.get('price', '?')}₽ • "
@@ -39,11 +38,10 @@ async def handle_catalog_overview(chat_id: int, send_message):
 
 async def handle_category_selection(chat_id: int, category: str, send_message, page: int = 1):
     all_products = await run_in_threadpool(get_top_products_by_category, category)
-    total_pages = ceil(len(all_products) / PAGE_SIZE)
-
     if not all_products:
         return await send_message(chat_id, f"⚠️ Товары категории '{category}' не найдены.")
 
+    total_pages = ceil(len(all_products) / PAGE_SIZE)
     page = max(1, min(page, total_pages))
     start = (page - 1) * PAGE_SIZE
     end = start + PAGE_SIZE
@@ -59,14 +57,13 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
         )
         await send_message(chat_id, text, photo=product.get('image_url'))
 
+    # 🔘 Кнопки навигации
     buttons = []
     if page > 1:
         buttons.append(InlineKeyboardButton("⬅️ Предыдущая", callback_data=f"{category}|{page - 1}"))
     if page < total_pages:
         buttons.append(InlineKeyboardButton("➡️ Следующая", callback_data=f"{category}|{page + 1}"))
-
-    # Добавляем кнопку Назад в каталог
     buttons.append(InlineKeyboardButton("🔙 Назад в каталог", callback_data="🛍 Каталог"))
 
-    markup = InlineKeyboardMarkup([buttons])
-    await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=markup)
+    reply_markup = InlineKeyboardMarkup([buttons])
+    await send_message(chat_id, f"Страница {page}/{total_pages}", reply_markup=reply_markup)
