@@ -4,27 +4,22 @@ from utils.supabase import get_top_products_by_category, get_distinct_categories
 from math import ceil
 from urllib.parse import quote
 
-PAGE_SIZE = 5  # Кол-во товаров на одной странице
+PAGE_SIZE = 5
 
-# 🔹 Показ списка категорий
 async def handle_catalog_overview(chat_id: int, send_message):
+    print("✅ handle_catalog_overview вызван")
     categories = await run_in_threadpool(get_distinct_categories)
     if not categories:
         return await send_message(chat_id, "⚠️ Категории не найдены.")
 
-    # Генерация кнопок по категориям
     keyboard = [
         [InlineKeyboardButton(text=title, callback_data=f"category|{quote(title)}|1")]
         for title in categories
     ]
 
-    return await send_message(
-        chat_id,
-        "📦 *Выберите категорию товара:*",
-        reply_markup=InlineKeyboardMarkup(keyboard).to_dict()
-    )
+    markup = InlineKeyboardMarkup(keyboard).to_dict()
+    return await send_message(chat_id, "📦 *Выберите категорию:*", reply_markup=markup)
 
-# 🔹 Показ товаров по категории с пагинацией
 async def handle_category_selection(chat_id: int, category: str, send_message, page: int = 1):
     all_products = await run_in_threadpool(get_top_products_by_category, category)
     if not all_products:
@@ -36,7 +31,6 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
     end = start + PAGE_SIZE
     products = all_products[start:end]
 
-    # Отправка каждого товара отдельным сообщением с фото
     for product in products:
         text = (
             f"*{product.get('title', 'Без названия')}*\n"
@@ -47,7 +41,6 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
         )
         await send_message(chat_id, text, photo=product.get("image_url"))
 
-    # Кнопки навигации по страницам
     nav_buttons = []
     if page > 1:
         nav_buttons.append(InlineKeyboardButton("⬅️ Назад", callback_data=f"category|{quote(category)}|{page - 1}"))
@@ -56,6 +49,6 @@ async def handle_category_selection(chat_id: int, category: str, send_message, p
 
     if nav_buttons:
         markup = InlineKeyboardMarkup([nav_buttons]).to_dict()
-        await send_message(chat_id, f"📄 Страница {page} из {total_pages}", reply_markup=markup)
+        await send_message(chat_id, f"📄 Страница {page}/{total_pages}", reply_markup=markup)
     else:
-        await send_message(chat_id, f"📄 Страница {page} из {total_pages}")
+        await send_message(chat_id, f"📄 Страница {page}/{total_pages}")
