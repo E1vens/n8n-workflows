@@ -1,6 +1,6 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from fastapi.concurrency import run_in_threadpool
-from utils.supabase import get_distinct_categories, get_products_by_category
+from utils.supabase import get_distinct_categories, get_top_products_by_category
 from math import ceil
 
 
@@ -15,7 +15,7 @@ async def handle_catalog_overview(chat_id: int, send_message):
     message_parts = []
 
     for cat in categories:
-        items = await run_in_threadpool(get_products_by_category, cat)
+        items = await run_in_threadpool(get_top_products_by_category, cat)
         items = items[:5]  # только 5 товаров
 
         if not items:
@@ -41,7 +41,7 @@ async def handle_catalog_overview(chat_id: int, send_message):
 
 
 async def handle_category_selection(chat_id: int, category: str, send_message, page: int = 1):
-    all_products = await run_in_threadpool(get_products_by_category, category)
+    all_products = await run_in_threadpool(get_top_products_by_category, category)
     total_pages = ceil(len(all_products) / PAGE_SIZE)
 
     if not all_products:
