@@ -1,5 +1,4 @@
-# handlers/language.py
-
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from handlers.buttons import get_main_menu
 
 # Временное хранилище языков пользователей
@@ -12,16 +11,17 @@ def get_user_language(chat_id: int) -> str:
     return user_languages.get(chat_id, "ru")
 
 async def handle_language_selection(chat_id: int, send_message):
-    keyboard = {
-        "inline_keyboard": [
-            [
-                {"text": "🇷🇺 Русский", "callback_data": "lang:ru"},
-                {"text": "🇬🇧 English", "callback_data": "lang:en"},
-                {"text": "🇪🇸 Español", "callback_data": "lang:es"},
-            ]
+    return await send_message(chat_id, "🌐 Выберите язык / Choose a language:", reply_markup=get_language_keyboard())
+
+def get_language_keyboard():
+    keyboard = [
+        [
+            InlineKeyboardButton("🇷🇺 Русский", callback_data="lang:ru"),
+            InlineKeyboardButton("🇬🇧 English", callback_data="lang:en"),
+            InlineKeyboardButton("🇪🇸 Español", callback_data="lang:es")
         ]
-    }
-    return await send_message(chat_id, "🌐 Выберите язык / Choose a language:", reply_markup=keyboard)
+    ]
+    return InlineKeyboardMarkup(keyboard).to_dict()
 
 def get_translated_text(text_id: str, lang: str) -> str:
     translations = {
