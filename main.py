@@ -66,7 +66,10 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_info(chat_id, send_message)
 
-            if text.lower() in ["🌟 элитный алкоголь", "элитный алкоголь", "премиум"]:
+            if text.lower() in [
+                "🌟 элитный алкоголь", "👑 элитный алкоголь",
+                "элитный алкоголь", "премиум"
+            ]:
                 return await handle_elite(chat_id, send_message)
 
             # 🔞 Проверка подтверждения возраста
