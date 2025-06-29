@@ -1,7 +1,3 @@
-from pathlib import Path
-
-# Define the updated code for `handlers/catalog.py` with multilingual support
-updated_catalog_code = """
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from fastapi.concurrency import run_in_threadpool
 from utils.supabase import get_top_products_by_category, get_distinct_categories
@@ -17,7 +13,6 @@ category_map = {}
 async def handle_catalog_overview(chat_id: int, send_message):
     print("✅ handle_catalog_overview вызван")
 
-    lang = get_user_language(chat_id)
     categories = await run_in_threadpool(get_distinct_categories)
     print("📦 Категории из Supabase:", categories)
 
@@ -35,7 +30,6 @@ async def handle_catalog_overview(chat_id: int, send_message):
 
 # 👉 Товары по категории
 async def handle_category_selection(chat_id: int, cat_id: str, send_message, page: int = 1):
-    lang = get_user_language(chat_id)
     category = category_map.get(cat_id)
     if not category:
         return await send_message(chat_id, get_translated_text(chat_id, "unknown_category"))
@@ -52,10 +46,10 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
 
     for product in products:
         text = (
-            f"*{product.get('title', 'Без названия')}*\\n"
-            f"{get_translated_text(chat_id, 'price')}: {product.get('price', '?')}₽\\n"
+            f"*{product.get('title', 'Без названия')}*\n"
+            f"{get_translated_text(chat_id, 'price')}: {product.get('price', '?')}₽\n"
             f"{get_translated_text(chat_id, 'volume')}: {product.get('volume', '?')} • "
-            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}\\n"
+            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}\n"
             f"[🔗 {get_translated_text(chat_id, 'view_product')}]({product.get('product_url', '#')})"
         )
         await send_message(chat_id, text, photo=product.get("image_url"))
@@ -68,13 +62,13 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
 
     if nav_buttons:
         markup = InlineKeyboardMarkup([nav_buttons]).to_dict()
-        await send_message(chat_id, get_translated_text(chat_id, "page_info").replace("{page}", str(page)).replace("{total}", str(total_pages)), reply_markup=markup)
+        await send_message(
+            chat_id,
+            get_translated_text(chat_id, "page_info").replace("{page}", str(page)).replace("{total}", str(total_pages)),
+            reply_markup=markup
+        )
     else:
-        await send_message(chat_id, get_translated_text(chat_id, "page_info").replace("{page}", str(page)).replace("{total}", str(total_pages)))
-"""
-
-# Save to file so user can access it
-catalog_path = Path("/mnt/data/catalog_multilang.py")
-#catalog_path.write_text(updated_catalog_code, encoding="utf-8")
-
-catalog_path.name
+        await send_message(
+            chat_id,
+            get_translated_text(chat_id, "page_info").replace("{page}", str(page)).replace("{total}", str(total_pages))
+        )
