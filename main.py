@@ -59,7 +59,7 @@ async def telegram_webhook(req: Request):
             print(f"📩 Сообщение от пользователя: {text}")
 
             # 🌐 Выбор языка
-            if text.lower() in ["🌐 выбрать язык", "выбрать язык", "язык"]:
+            if text.lower() in ["🌐 выбрать язык", "выбрать язык", "язык", "choose language", "elegir idioma"]:
                 return await handle_language_selection(chat_id, send_message)
 
             # 🔞 Подтверждение возраста
@@ -110,8 +110,9 @@ async def telegram_webhook(req: Request):
                 lang_code = data_value.split(":")[1]
                 set_user_language(chat_id, lang_code)
                 
-                await send_message(chat_id, get_translated_text(chat_id, "language_set"))
-                return await send_message(chat_id, get_translated_text(chat_id, "menu_prompt"), reply_markup=get_main_menu(chat_id))
+                await send_message(chat_id, get_translated_text(chat_id, "language_set"))  # ✅ Язык установлен
+                await send_message(chat_id, get_translated_text(chat_id, "menu_prompt"))   # ℹ️ Нажмите Каталог
+                return await send_message(chat_id, "👇", reply_markup=get_main_menu(chat_id))  # 👇 и само меню
                 
 
             # 👉 Категория
