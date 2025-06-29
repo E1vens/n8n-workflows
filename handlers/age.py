@@ -27,5 +27,5 @@ def handle_age_confirmation(chat_id: int, text: str):
 def request_age_confirmation():
     return {
         "text": "Подтвердите, пожалуйста, что вам есть 18 лет:",
-        "reply_markup": get_age_confirmation_buttons()
+        "reply_markup": get_age_confirmation_buttons(chat_id)
     }
