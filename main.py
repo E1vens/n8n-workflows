@@ -79,6 +79,12 @@ async def telegram_webhook(req: Request):
             data_value = callback.get("data", "").strip()
             print(f"📲 Callback получен: {data_value}")
 
+            # 🔞 Обработка подтверждения возраста
+            if data_value.startswith("age:"):
+                result = handle_age_confirmation(chat_id, data_value)
+                return await send_message(chat_id, result["text"], reply_markup=result.get("reply_markup"))
+
+            # 👉 Выбор категории
             if data_value.startswith("cat|"):
                 try:
                     _, cat_id, page = data_value.split("|")
