@@ -92,7 +92,7 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_elite(chat_id, send_message)
 
-            return await send_message(chat_id, get_translated_text(chat_id, "menu_prompt"), reply_markup=get_main_menu(chat_id))
+            return await send_message(chat_id, get_translated_text(chat_id, "language_set"), reply_markup=get_main_menu(chat_id))
             
         # 👉 Callback-кнопки
         elif "callback_query" in data:
