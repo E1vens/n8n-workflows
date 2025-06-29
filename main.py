@@ -4,7 +4,7 @@ from handlers.buttons import get_main_menu
 from handlers.age import is_confirmed, request_age_confirmation, handle_age_confirmation
 from handlers.info import handle_info
 from handlers.elite import handle_elite
-from handlers.language import get_language_keyboard, set_user_language, get_translated_text
+from handlers.language import handle_language_selection, set_user_language, get_translated_text
 from config import TELEGRAM_API_URL
 from urllib.parse import unquote
 import httpx
@@ -13,15 +13,9 @@ import traceback
 
 app = FastAPI()
 
-# Сохраняем язык пользователей
-user_languages = {}
-
 # ✅ Отправка сообщений в Telegram
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None, photo: str | None = None):
-    payload = {
-        "chat_id": chat_id,
-        # "parse_mode": "Markdown"
-    }
+    payload = {"chat_id": chat_id}
 
     if photo:
         payload.update({"photo": photo, "caption": text})
@@ -38,6 +32,7 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         response = await client.post(f"{TELEGRAM_API_URL}/{method}", json=payload)
         print("📥 Ответ Telegram:", response.status_code, response.content.decode())
 
+
 # ✅ Обработка входящих сообщений и нажатий кнопок
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
@@ -50,23 +45,24 @@ async def telegram_webhook(req: Request):
         chat_id = None
         text = ""
 
+        # 👉 Сообщение от пользователя
         if "message" in data:
             message = data["message"]
             chat_id = message["chat"]["id"]
             text = message.get("text")
 
             if not text:
-                print("📭 Пустое сообщение (возможно стикер, фото и т.п.) — игнорируем")
+                print("📭 Пустое сообщение — игнорируем")
                 return {"ok": True}
 
             text = text.strip()
             print(f"📩 Сообщение от пользователя: {text}")
 
-            # 👉 Выбор языка
-            if text.lower() in ["🌐 язык", "язык", "/language"]:
-                return await send_message(chat_id, "Выберите язык / Choose your language / Elija su idioma:", reply_markup=get_language_keyboard())
+            # 🌐 Выбор языка
+            if text.lower() in ["🌐 выбрать язык", "выбрать язык", "язык"]:
+                return await handle_language_selection(chat_id, send_message)
 
-            # 🔞 Проверка подтверждения возраста
+            # 🔞 Подтверждение возраста
             if not is_confirmed(chat_id):
                 if text.startswith("age:"):
                     result = handle_age_confirmation(chat_id, text)
@@ -89,8 +85,9 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_elite(chat_id, send_message)
 
-            return await send_message(chat_id, "Нажмите 🛍 Каталог", reply_markup=get_main_menu())
+            return await send_message(chat_id, get_translated_text(chat_id, "menu_prompt"), reply_markup=get_main_menu())
 
+        # 👉 Callback-кнопки
         elif "callback_query" in data:
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
@@ -105,10 +102,10 @@ async def telegram_webhook(req: Request):
             # 🌐 Установка языка
             if data_value.startswith("lang:"):
                 lang_code = data_value.split(":")[1]
-                set_language(chat_id, lang_code)
+                set_user_language(chat_id, lang_code)
                 return await send_message(chat_id, get_translated_text(chat_id, "language_set"), reply_markup=get_main_menu())
 
-            # 👉 Выбор категории
+            # 👉 Категория
             if data_value.startswith("cat|"):
                 try:
                     _, cat_id, page = data_value.split("|")
@@ -117,9 +114,9 @@ async def telegram_webhook(req: Request):
                     print("❌ Ошибка разбора callback 'cat|...':", e)
                     return await send_message(chat_id, "⚠️ Не удалось загрузить товары.")
 
-        return {"ok": True}
+        return {"ok": True"}
 
     except Exception as e:
         print("❌ ГЛОБАЛЬНАЯ ОШИБКА:", str(e))
         traceback.print_exc()
-        return {"ok": True}
+        return {"ok": True"}
