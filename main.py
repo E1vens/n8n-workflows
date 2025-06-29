@@ -114,7 +114,7 @@ async def telegram_webhook(req: Request):
                     print("❌ Ошибка разбора callback 'cat|...':", e)
                     return await send_message(chat_id, "⚠️ Не удалось загрузить товары.")
 
-        return {"ok": True"}
+        return {"ok": True}
 
     except Exception as e:
         print("❌ ГЛОБАЛЬНАЯ ОШИБКА:", str(e))
