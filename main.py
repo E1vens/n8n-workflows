@@ -56,7 +56,21 @@ async def telegram_webhook(req: Request):
             text = text.strip()
             print(f"📩 Сообщение от пользователя: {text}")
 
-            # --- БЛОК ВСЕХ ВАРИАНТОВ КОМАНД ---
+            # --- СНАЧАЛА проверяем возраст ---
+            if not is_confirmed(chat_id):
+                if text.startswith("age:"):
+                    result = handle_age_confirmation(chat_id, text)
+                    return await send_message(
+                        chat_id,
+                        result["text"],
+                        reply_markup=result.get("reply_markup")
+                    )
+                return await send_message(
+                    chat_id,
+                    **request_age_confirmation(chat_id)
+                )
+
+            # --- Команды ---
             if text.lower() in [
                 "/start",
                 "каталог", "🛍 каталог",
@@ -93,22 +107,9 @@ async def telegram_webhook(req: Request):
             ):
                 return await handle_language_selection(chat_id, send_message)
 
-            if not is_confirmed(chat_id):
-                if text.startswith("age:"):
-                    result = handle_age_confirmation(chat_id, text)
-                    return await send_message(
-                        chat_id,
-                        result["text"],
-                        reply_markup=result.get("reply_markup")
-                    )
-                return await send_message(
-                    chat_id,
-                    **request_age_confirmation(chat_id)
-                )
-
             return await send_message(
                 chat_id,
-                text=".",
+                text=get_translated_text(chat_id, "menu_prompt"),
                 reply_markup=get_main_menu(chat_id)
             )
 
@@ -131,8 +132,8 @@ async def telegram_webhook(req: Request):
 
                 return await send_message(
                     chat_id,
-                    reply_markup=get_main_menu(chat_id),
-                    text=""
+                    text=get_translated_text(chat_id, "menu_prompt"),
+                    reply_markup=get_main_menu(chat_id)
                 )
 
             if data_value.startswith("cat|"):
