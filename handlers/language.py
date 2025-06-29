@@ -21,6 +21,16 @@ def get_language_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
+"btn_age_yes": {"ru": "Да, мне есть 18", "en": "Yes, I'm over 18", "es": "Sí, tengo más de 18"},
+"btn_age_no": {"ru": "Нет", "en": "No", "es": "No"},
+"btn_catalog": {"ru": "Каталог", "en": "Catalog", "es": "Catálogo"},
+"btn_elite": {"ru": "Элитный алкоголь", "en": "Elite Alcohol", "es": "Alcohol Premium"},
+"btn_ai": {"ru": "ИИ консультант", "en": "AI Assistant", "es": "Asistente IA"},
+"btn_info": {"ru": "Информация о компании и партнёрах", "en": "Company Info", "es": "Información de la empresa"},
+"btn_language": {"ru": "Выбрать язык", "en": "Choose Language", "es": "Elegir idioma"},
+"btn_loyalty": {"ru": "Карта лояльности", "en": "Loyalty Card", "es": "Tarjeta de fidelidad"},
+
+
 def get_translated_text(chat_id: int, text_id: str) -> str:
     lang = get_user_language(chat_id)
     translations = {
