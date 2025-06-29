@@ -1,7 +1,5 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-from handlers.buttons import get_main_menu
 
-# Временное хранилище языков пользователей
 user_languages: dict[int, str] = {}
 
 def set_user_language(chat_id: int, lang: str):
