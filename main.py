@@ -4,7 +4,7 @@ from handlers.buttons import get_main_menu
 from handlers.age import is_confirmed, request_age_confirmation, handle_age_confirmation
 from handlers.info import handle_info
 from handlers.elite import handle_elite
-from handlers.language import get_language_keyboard, set_language, get_translated_text
+from handlers.language import get_language_keyboard, set_user_language, get_translated_text
 from config import TELEGRAM_API_URL
 from urllib.parse import unquote
 import httpx
