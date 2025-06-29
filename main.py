@@ -92,8 +92,7 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_elite(chat_id, send_message)
 
-            return await send_message(chat_id, get_translated_text(chat_id, "language_set"), reply_markup=get_main_menu(chat_id))
-            
+
         # 👉 Callback-кнопки
         elif "callback_query" in data:
             callback = data["callback_query"]
@@ -110,7 +109,10 @@ async def telegram_webhook(req: Request):
             if data_value.startswith("lang:"):
                 lang_code = data_value.split(":")[1]
                 set_user_language(chat_id, lang_code)
-                return await send_message(chat_id, get_translated_text(chat_id, "language_set"), reply_markup=get_main_menu())
+                
+                await send_message(chat_id, get_translated_text(chat_id, "language_set"))
+                return await send_message(chat_id, get_translated_text(chat_id, "menu_prompt"), reply_markup=get_main_menu(chat_id))
+                
 
             # 👉 Категория
             if data_value.startswith("cat|"):
