@@ -16,10 +16,15 @@ async def handle_catalog_overview(chat_id: int, send_message):
     if not categories:
         return await send_message(chat_id, "⚠️ Категории не найдены.")
 
-    keyboard = [
-        [InlineKeyboardButton(text=cat, callback_data=f"category|{quote(cat)}|1")]
-        for cat in categories
-    ]
+    keyboard = []
+
+    for cat in categories:
+        encoded = quote(cat)
+        if len(f"category|{encoded}|1") > 64:
+            encoded = quote(cat[:16])  # безопасная обрезка
+        keyboard.append([
+            InlineKeyboardButton(text=cat, callback_data=f"category|{encoded}|1")
+        ])
 
     markup = InlineKeyboardMarkup(keyboard).to_dict()
     print("🎛 Inline клавиатура:", markup)
