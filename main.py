@@ -5,14 +5,15 @@ from config import TELEGRAM_API_URL
 from urllib.parse import unquote
 import httpx
 import json
+import traceback
 
 app = FastAPI()
 
-# Отправка сообщения в Telegram
+# ✅ Отправка сообщений в Telegram
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None, photo: str | None = None):
     payload = {
         "chat_id": chat_id,
-        # "parse_mode": "Markdown"  # можно включить позже
+        # "parse_mode": "Markdown"  # можно включить при необходимости
     }
 
     if photo:
@@ -30,7 +31,8 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         response = await client.post(f"{TELEGRAM_API_URL}/{method}", json=payload)
         print("📥 Ответ Telegram:", response.status_code, response.content.decode())
 
-# Основной вебхук
+
+# ✅ Обработка входящих сообщений и нажатий кнопок
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     print("📥 Получен запрос от Telegram")
@@ -42,13 +44,14 @@ async def telegram_webhook(req: Request):
         chat_id = None
         text = ""
 
+        # 👉 Обычное сообщение от пользователя
         if "message" in data:
             message = data["message"]
             chat_id = message["chat"]["id"]
             text = message.get("text")
 
             if not text:
-                print("📭 Пустое сообщение (возможно стикер, фото, и т.д.) — игнорируем")
+                print("📭 Пустое сообщение (возможно стикер, фото и т.п.) — игнорируем")
                 return {"ok": True}
 
             text = text.strip()
@@ -59,25 +62,24 @@ async def telegram_webhook(req: Request):
 
             return await send_message(chat_id, "Нажмите 🛍 Каталог", reply_markup=get_main_menu())
 
+        # 👉 Callback от inline-кнопки
         elif "callback_query" in data:
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "").strip()
             print(f"📲 Callback получен: {data_value}")
 
-            if data_value.startswith("category|"):
+            if data_value.startswith("cat|"):
                 try:
-                    _, raw_category, page = data_value.split("|")
-                    category = unquote(raw_category)
-                    return await handle_category_selection(chat_id, category, send_message, int(page))
+                    _, cat_id, page = data_value.split("|")
+                    return await handle_category_selection(chat_id, cat_id, send_message, int(page))
                 except Exception as e:
-                    print("❌ Ошибка разбора callback 'category':", e)
+                    print("❌ Ошибка разбора callback 'cat|...':", e)
                     return await send_message(chat_id, "⚠️ Не удалось загрузить товары.")
 
         return {"ok": True}
 
     except Exception as e:
         print("❌ ГЛОБАЛЬНАЯ ОШИБКА:", str(e))
-        import traceback
         traceback.print_exc()
         return {"ok": True}
