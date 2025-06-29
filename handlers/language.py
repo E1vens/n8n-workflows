@@ -35,5 +35,10 @@ def get_translated_text(text_id: str, lang: str) -> str:
             "en": "Please confirm that you are over 18:",
             "es": "Por favor confirme que tiene más de 18 años:",
         },
+        "language_set": {
+            "ru": "✅ Язык установлен: Русский",
+            "en": "✅ Language set: English",
+            "es": "✅ Idioma establecido: Español",
+        },
     }
     return translations.get(text_id, {}).get(lang, text_id)
