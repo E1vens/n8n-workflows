@@ -63,11 +63,7 @@ async def telegram_webhook(req: Request):
                 "choose language", "elegir idioma",
                 get_translated_text(chat_id, "btn_language").lower()
             ]:
-                return await send_message(
-                    chat_id,
-                    get_translated_text(chat_id, "menu_prompt"),
-                    reply_markup=get_main_menu(chat_id)
-                )
+                return await handle_language_selection(chat_id, send_message)
 
             # Подтверждение возраста
             if not is_confirmed(chat_id):
