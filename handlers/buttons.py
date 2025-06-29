@@ -38,3 +38,14 @@ def get_category_buttons():
         for title in categories
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
+
+# ✅ Кнопки выбора языка (inline)
+def get_language_buttons():
+    keyboard = [
+        [
+            InlineKeyboardButton("🇷🇺 Русский", callback_data="lang:ru"),
+            InlineKeyboardButton("🇬🇧 English", callback_data="lang:en"),
+            InlineKeyboardButton("🇪🇸 Español", callback_data="lang:es")
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard).to_dict()
