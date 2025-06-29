@@ -41,5 +41,60 @@ def get_translated_text(chat_id: int, text_id: str) -> str:
             "en": "✅ Language set: English",
             "es": "✅ Idioma establecido: Español",
         },
+        "no_categories": {
+            "ru": "⚠️ Категории не найдены.",
+            "en": "⚠️ No categories found.",
+            "es": "⚠️ No se encontraron categorías.",
+        },
+        "select_category": {
+            "ru": "📦 Выберите категорию товара:",
+            "en": "📦 Choose a product category:",
+            "es": "📦 Elija una categoría de producto:",
+        },
+        "unknown_category": {
+            "ru": "⚠️ Неизвестная категория.",
+            "en": "⚠️ Unknown category.",
+            "es": "⚠️ Categoría desconocida.",
+        },
+        "empty_category": {
+            "ru": "⚠️ В категории *{category}* ничего не найдено.",
+            "en": "⚠️ No items found in *{category}*.",
+            "es": "⚠️ No se encontraron artículos en *{category}*.",
+        },
+        "price": {
+            "ru": "Цена",
+            "en": "Price",
+            "es": "Precio",
+        },
+        "volume": {
+            "ru": "Объём",
+            "en": "Volume",
+            "es": "Volumen",
+        },
+        "strength": {
+            "ru": "Крепость",
+            "en": "Strength",
+            "es": "Graduación",
+        },
+        "view_product": {
+            "ru": "🔗 Открыть товар",
+            "en": "🔗 View product",
+            "es": "🔗 Ver producto",
+        },
+        "back": {
+            "ru": "⬅️ Назад",
+            "en": "⬅️ Back",
+            "es": "⬅️ Atrás",
+        },
+        "next": {
+            "ru": "➡️ Далее",
+            "en": "➡️ Next",
+            "es": "➡️ Siguiente",
+        },
+        "page_info": {
+            "ru": "📄 Страница {page} из {total}",
+            "en": "📄 Page {page} of {total}",
+            "es": "📄 Página {page} de {total}",
+        },
     }
     return translations.get(text_id, {}).get(lang, text_id)
