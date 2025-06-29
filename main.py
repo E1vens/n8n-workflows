@@ -76,7 +76,6 @@ async def telegram_webhook(req: Request):
                 "🤖 ии консультант", "ии консультант",
                 "ai assistant", "asistente ia"
             ]:
-                # Твоя функция или заглушка
                 return await send_message(chat_id, "ИИ ассистент пока не реализован.")
 
             if text.lower() in [
@@ -94,7 +93,6 @@ async def telegram_webhook(req: Request):
             ):
                 return await handle_language_selection(chat_id, send_message)
 
-            # --- Проверка возраста (ДОЛЖНА БЫТЬ ПОСЛЕ ОСНОВНЫХ КОМАНД) ---
             if not is_confirmed(chat_id):
                 if text.startswith("age:"):
                     result = handle_age_confirmation(chat_id, text)
@@ -108,44 +106,35 @@ async def telegram_webhook(req: Request):
                     **request_age_confirmation(chat_id)
                 )
 
-            # --- По умолчанию отправляем главное меню ---
             return await send_message(
                 chat_id,
                 get_translated_text(chat_id, "menu_prompt"),
                 reply_markup=get_main_menu(chat_id)
             )
 
-        # Callback-кнопки
         elif "callback_query" in data:
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "").strip()
             print(f"📲 Callback получен: {data_value}")
 
-            # Подтверждение возраста
             if data_value.startswith("age:"):
                 result = handle_age_confirmation(chat_id, data_value)
                 return await send_message(chat_id, result["text"], reply_markup=result.get("reply_markup"))
 
-            # Установка языка
             if data_value.startswith("lang:"):
                 lang_code = data_value.split(":")[1]
                 set_user_language(chat_id, lang_code)
 
-                # Удаляем старую клавиатуру (иначе Telegram не обновит её)
                 await send_message(chat_id, ".", reply_markup={"remove_keyboard": True})
-
-                # Сообщаем об установке языка
                 await send_message(chat_id, get_translated_text(chat_id, "language_set"))
 
-                # Показываем подсказку и новое главное меню
                 return await send_message(
                     chat_id,
-                    get_translated_text(chat_id, "menu_prompt"),
-                    reply_markup=get_main_menu(chat_id)
+                    reply_markup=get_main_menu(chat_id),
+                    text=""
                 )
 
-            # Категория
             if data_value.startswith("cat|"):
                 try:
                     _, cat_id, page = data_value.split("|")
