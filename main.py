@@ -3,6 +3,7 @@ from handlers.catalog import handle_catalog_overview, handle_category_selection
 from handlers.buttons import get_main_menu
 from handlers.age import is_confirmed, request_age_confirmation, handle_age_confirmation
 from handlers.info import handle_info
+from handlers.elite import handle_elite
 from config import TELEGRAM_API_URL
 from urllib.parse import unquote
 import httpx
@@ -64,6 +65,9 @@ async def telegram_webhook(req: Request):
                 "ℹ️ информация о компании и партнёрах"
             ]:
                 return await handle_info(chat_id, send_message)
+
+            if text.lower() in ["🌟 элитный алкоголь", "элитный алкоголь", "премиум"]:
+                return await handle_elite(chat_id, send_message)
 
             # 🔞 Проверка подтверждения возраста
             if not is_confirmed(chat_id):
