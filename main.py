@@ -13,7 +13,7 @@ import traceback
 
 app = FastAPI()
 
-# ✅ Отправка сообщений в Telegram
+# Отправка сообщений в Telegram
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None, photo: str | None = None):
     payload = {"chat_id": chat_id}
 
@@ -33,7 +33,6 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         print("📥 Ответ Telegram:", response.status_code, response.content.decode())
 
 
-# ✅ Обработка входящих сообщений и нажатий кнопок
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
     print("📥 Получен запрос от Telegram")
@@ -45,7 +44,7 @@ async def telegram_webhook(req: Request):
         chat_id = None
         text = ""
 
-        # 👉 Сообщение от пользователя
+        # Сообщение от пользователя
         if "message" in data:
             message = data["message"]
             chat_id = message["chat"]["id"]
@@ -58,11 +57,11 @@ async def telegram_webhook(req: Request):
             text = text.strip()
             print(f"📩 Сообщение от пользователя: {text}")
 
-            # 🌐 Выбор языка
+            # Выбор языка
             if text.lower() in ["🌐 выбрать язык", "выбрать язык", "язык", "choose language", "elegir idioma"]:
                 return await handle_language_selection(chat_id, send_message)
 
-            # 🔞 Подтверждение возраста
+            # Подтверждение возраста
             if not is_confirmed(chat_id):
                 if text.startswith("age:"):
                     result = handle_age_confirmation(chat_id, text)
@@ -76,7 +75,7 @@ async def telegram_webhook(req: Request):
                     **request_age_confirmation(chat_id)
                 )
 
-            # ✅ Возраст подтверждён — продолжаем
+            # Возраст подтверждён — продолжаем
             if text.lower() in ["/start", "каталог", "🛍 каталог"]:
                 return await handle_catalog_overview(chat_id, send_message)
 
@@ -92,39 +91,44 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_elite(chat_id, send_message)
 
+            # По умолчанию отправляем меню
+            return await send_message(
+                chat_id,
+                get_translated_text(chat_id, "menu_prompt"),
+                reply_markup=get_main_menu(chat_id)
+            )
 
-        # 👉 Callback-кнопки
+        # Callback-кнопки
         elif "callback_query" in data:
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "").strip()
             print(f"📲 Callback получен: {data_value}")
 
-            # 🔞 Подтверждение возраста
+            # Подтверждение возраста
             if data_value.startswith("age:"):
                 result = handle_age_confirmation(chat_id, data_value)
                 return await send_message(chat_id, result["text"], reply_markup=result.get("reply_markup"))
 
-            # 🌐 Установка языка
+            # Установка языка
             if data_value.startswith("lang:"):
                 lang_code = data_value.split(":")[1]
                 set_user_language(chat_id, lang_code)
 
-                # ✅ Сообщаем, что язык установлен
+                # Удаляем старую клавиатуру (иначе Telegram не обновит её)
+                await send_message(chat_id, ".", reply_markup={"remove_keyboard": True})
+
+                # Сообщаем об установке языка
                 await send_message(chat_id, get_translated_text(chat_id, "language_set"))
 
-                # ℹ️ Показываем подсказку
-                await send_message(chat_id, get_translated_text(chat_id, "menu_prompt"))
+                # Показываем подсказку и новое главное меню
+                return await send_message(
+                    chat_id,
+                    get_translated_text(chat_id, "menu_prompt"),
+                    reply_markup=get_main_menu(chat_id)
+                )
 
-                # ❗️Удаляем старую клавиатуру, чтобы Telegram перерисовал меню
-                await send_message(chat_id, "⏳", reply_markup={"remove_keyboard": True})
-
-                # 👇 Показываем актуальное главное меню
-                return await send_message(chat_id, "👇", reply_markup=get_main_menu(chat_id))
-
-                
-
-            # 👉 Категория
+            # Категория
             if data_value.startswith("cat|"):
                 try:
                     _, cat_id, page = data_value.split("|")
