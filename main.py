@@ -28,7 +28,7 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
 
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{TELEGRAM_API_URL}/{method}", json=payload)
-        print("📥 Ответ Telegram:", response.status_code, await response.text())
+        print("📥 Ответ Telegram:", response.status_code, response.content.decode())
 
 # Основной вебхук
 @app.post("/webhook")
