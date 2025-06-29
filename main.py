@@ -109,10 +109,19 @@ async def telegram_webhook(req: Request):
             if data_value.startswith("lang:"):
                 lang_code = data_value.split(":")[1]
                 set_user_language(chat_id, lang_code)
-                
-                await send_message(chat_id, get_translated_text(chat_id, "language_set"))  # ✅ Язык установлен
-                await send_message(chat_id, get_translated_text(chat_id, "menu_prompt"))   # ℹ️ Нажмите Каталог
-                return await send_message(chat_id, "👇", reply_markup=get_main_menu(chat_id))  # 👇 и само меню
+
+                # ✅ Сообщаем, что язык установлен
+                await send_message(chat_id, get_translated_text(chat_id, "language_set"))
+
+                # ℹ️ Показываем подсказку
+                await send_message(chat_id, get_translated_text(chat_id, "menu_prompt"))
+
+                # ❗️Удаляем старую клавиатуру, чтобы Telegram перерисовал меню
+                await send_message(chat_id, "⏳", reply_markup={"remove_keyboard": True})
+
+                # 👇 Показываем актуальное главное меню
+                return await send_message(chat_id, "👇", reply_markup=get_main_menu(chat_id))
+
                 
 
             # 👉 Категория
