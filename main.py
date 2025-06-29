@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from handlers.catalog import handle_catalog_overview, handle_category_selection
 from handlers.buttons import get_main_menu
+from handlers.age import is_confirmed, request_age_confirmation, handle_age_confirmation
 from config import TELEGRAM_API_URL
 from urllib.parse import unquote
 import httpx
@@ -57,10 +58,19 @@ async def telegram_webhook(req: Request):
             text = text.strip()
             print(f"📩 Сообщение от пользователя: {text}")
 
-            if "каталог" in text.lower():
+            # 🔞 Проверка подтверждения возраста
+            if not is_confirmed(chat_id):
+                if text.startswith("age:"):
+                    result = handle_age_confirmation(chat_id, text)
+                    return await send_message(chat_id, result["text"], reply_markup=result.get("reply_markup"))
+                return await send_message(chat_id, **request_age_confirmation())
+
+            # ✅ Возраст подтверждён — продолжаем
+            if text.lower() in ["/start", "каталог", "🛍 каталог"]:
                 return await handle_catalog_overview(chat_id, send_message)
 
             return await send_message(chat_id, "Нажмите 🛍 Каталог", reply_markup=get_main_menu())
+
 
         # 👉 Callback от inline-кнопки
         elif "callback_query" in data:
