@@ -38,45 +38,46 @@ async def telegram_webhook(req: Request):
     try:
         data = await req.json()
         print("📦 Данные:", json.dumps(data, indent=2, ensure_ascii=False))
-    except Exception as e:
-        print("❌ Ошибка чтения JSON:", e)
+
+        chat_id = None
+        text = ""
+
+        if "message" in data:
+            message = data["message"]
+            chat_id = message["chat"]["id"]
+            text = message.get("text")
+
+            if not text:
+                print("📭 Пустое сообщение (возможно стикер, фото, и т.д.) — игнорируем")
+                return {"ok": True}
+
+            text = text.strip()
+            print(f"📩 Сообщение от пользователя: {text}")
+
+            if "каталог" in text.lower():
+                return await handle_catalog_overview(chat_id, send_message)
+
+            return await send_message(chat_id, "Нажмите 🛍 Каталог", reply_markup=get_main_menu())
+
+        elif "callback_query" in data:
+            callback = data["callback_query"]
+            chat_id = callback["from"]["id"]
+            data_value = callback.get("data", "").strip()
+            print(f"📲 Callback получен: {data_value}")
+
+            if data_value.startswith("category|"):
+                try:
+                    _, raw_category, page = data_value.split("|")
+                    category = unquote(raw_category)
+                    return await handle_category_selection(chat_id, category, send_message, int(page))
+                except Exception as e:
+                    print("❌ Ошибка разбора callback 'category':", e)
+                    return await send_message(chat_id, "⚠️ Не удалось загрузить товары.")
+
         return {"ok": True}
 
-    chat_id = None
-    text = ""
-
-    # Обработка обычных сообщений
-    if "message" in data:
-        message = data["message"]
-        chat_id = message["chat"]["id"]
-        text = message.get("text")
-
-        if not text:
-            print("📭 Пустое сообщение (возможно стикер, фото, и т.д.) — игнорируем")
-            return {"ok": True}
-
-        text = text.strip()
-        print(f"📩 Сообщение от пользователя: {text}")
-
-        if "каталог" in text.lower():
-            return await handle_catalog_overview(chat_id, send_message)
-
-        return await send_message(chat_id, "Нажмите 🛍 Каталог", reply_markup=get_main_menu())
-
-    # Обработка inline-кнопок (callback_query)
-    elif "callback_query" in data:
-        callback = data["callback_query"]
-        chat_id = callback["from"]["id"]
-        data_value = callback.get("data", "").strip()
-        print(f"📲 Callback получен: {data_value}")
-
-        if data_value.startswith("category|"):
-            try:
-                _, raw_category, page = data_value.split("|")
-                category = unquote(raw_category)
-                return await handle_category_selection(chat_id, category, send_message, int(page))
-            except Exception as e:
-                print("❌ Ошибка разбора callback 'category':", e)
-                return await send_message(chat_id, "⚠️ Не удалось загрузить товары.")
-
-    return {"ok": True}
+    except Exception as e:
+        print("❌ ГЛОБАЛЬНАЯ ОШИБКА:", str(e))
+        import traceback
+        traceback.print_exc()
+        return {"ok": True}
