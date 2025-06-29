@@ -8,7 +8,11 @@ PAGE_SIZE = 5
 
 # 👉 Категории (при нажатии на кнопку "Каталог")
 async def handle_catalog_overview(chat_id: int, send_message):
+    print("✅ handle_catalog_overview вызван")
+
     categories = await run_in_threadpool(get_distinct_categories)
+    print("📦 Категории из Supabase:", categories)
+
     if not categories:
         return await send_message(chat_id, "⚠️ Категории не найдены.")
 
@@ -17,10 +21,13 @@ async def handle_catalog_overview(chat_id: int, send_message):
         for cat in categories
     ]
 
+    markup = InlineKeyboardMarkup(keyboard).to_dict()
+    print("🎛 Inline клавиатура:", markup)
+
     return await send_message(
         chat_id,
-        "📦 *Выберите категорию товара:*",
-        reply_markup=InlineKeyboardMarkup(keyboard).to_dict()
+        "📦 Выберите категорию товара:",
+        reply_markup=markup
     )
 
 # 👉 Товары по категории
