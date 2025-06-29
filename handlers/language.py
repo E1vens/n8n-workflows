@@ -96,5 +96,36 @@ def get_translated_text(chat_id: int, text_id: str) -> str:
             "en": "📄 Page {page} of {total}",
             "es": "📄 Página {page} de {total}",
         },
+        "btn_catalog": {
+            "ru": "Каталог",
+            "en": "Catalog",
+            "es": "Catálogo",
+        },
+        "btn_elite": {
+            "ru": "Элитный алкоголь",
+            "en": "Elite Alcohol",
+            "es": "Alcohol Premium",
+        },
+        "btn_ai": {
+            "ru": "ИИ консультант",
+            "en": "AI Assistant",
+            "es": "Asistente IA",
+        },
+        "btn_info": {
+            "ru": "Информация о компании и партнёрах",
+            "en": "Company Info",
+            "es": "Información de la empresa",
+        },
+        "btn_language": {
+            "ru": "Выбрать язык",
+            "en": "Choose Language",
+            "es": "Elegir idioma",
+        },
+        "btn_loyalty": {
+            "ru": "Карта лояльности",
+            "en": "Loyalty Card",
+            "es": "Tarjeta de fidelidad",
+        },
+
     }
     return translations.get(text_id, {}).get(lang, text_id)
