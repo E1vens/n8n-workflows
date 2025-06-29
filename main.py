@@ -57,12 +57,14 @@ async def telegram_webhook(req: Request):
             text = text.strip()
             print(f"📩 Сообщение от пользователя: {text}")
 
-            # Главное меню при нажатии "Выбрать язык" или её переводов
-            if text.lower() in [
-                "🌐 выбрать язык", "выбрать язык", "язык",
-                "choose language", "elegir idioma",
-                get_translated_text(chat_id, "btn_language").lower()
-            ]:
+            # 👉 Исправлено: выбор языка по кнопке на любом языке
+            if (
+                text.lower() in [
+                    "🌐 выбрать язык", "выбрать язык", "язык",
+                    "choose language", "elegir idioma",
+                ]
+                or text.lower() == get_translated_text(chat_id, "btn_language").lower()
+            ):
                 return await handle_language_selection(chat_id, send_message)
 
             # Подтверждение возраста
