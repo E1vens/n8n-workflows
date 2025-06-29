@@ -2,17 +2,19 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 from urllib.parse import quote
 from handlers.language import get_translated_text
 
-# ✅ Кнопки подтверждения возраста
-def get_age_confirmation_buttons():
+# ✅ Кнопки подтверждения возраста (мультиязычные)
+def get_age_confirmation_buttons(chat_id: int):
+    yes_text = get_translated_text(chat_id, "btn_age_yes") or "Да, мне есть 18"
+    no_text = get_translated_text(chat_id, "btn_age_no") or "Нет"
     keyboard = [
         [
-            InlineKeyboardButton("Да, мне есть 18", callback_data="age:yes"),
-            InlineKeyboardButton("Нет", callback_data="age:no")
+            InlineKeyboardButton(yes_text, callback_data="age:yes"),
+            InlineKeyboardButton(no_text, callback_data="age:no")
         ]
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-# ✅ Главное меню (в зависимости от языка)
+# ✅ Главное меню с мультиязычными кнопками
 def get_main_menu(chat_id: int):
     keyboard = [
         [
@@ -30,7 +32,7 @@ def get_main_menu(chat_id: int):
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True).to_dict()
 
-# ✅ Кнопки выбора категории (inline)
+# ✅ Кнопки выбора категории (пока статично — можно адаптировать позже)
 def get_category_buttons():
     categories = [
         "Виски",
@@ -49,7 +51,7 @@ def get_category_buttons():
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-# ✅ Кнопки выбора языка (inline)
+# ✅ Кнопки выбора языка
 def get_language_buttons():
     keyboard = [
         [
