@@ -75,6 +75,6 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
 
 # Save to file so user can access it
 catalog_path = Path("/mnt/data/catalog_multilang.py")
-catalog_path.write_text(updated_catalog_code, encoding="utf-8")
+#catalog_path.write_text(updated_catalog_code, encoding="utf-8")
 
 catalog_path.name
