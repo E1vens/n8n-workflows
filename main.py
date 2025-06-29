@@ -108,7 +108,7 @@ async def telegram_webhook(req: Request):
 
             return await send_message(
                 chat_id,
-                get_translated_text(chat_id, "menu_prompt"),
+                text=".",
                 reply_markup=get_main_menu(chat_id)
             )
 
