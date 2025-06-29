@@ -6,7 +6,6 @@ from handlers.info import handle_info
 from handlers.elite import handle_elite
 from handlers.language import handle_language_selection, set_user_language, get_translated_text
 from config import TELEGRAM_API_URL
-from urllib.parse import unquote
 import httpx
 import json
 import traceback
@@ -57,11 +56,11 @@ async def telegram_webhook(req: Request):
             text = text.strip()
             print(f"📩 Сообщение от пользователя: {text}")
 
-            # 👉 Исправлено: выбор языка по кнопке на любом языке
+            # Выбор языка (работает для всех языков меню)
             if (
                 text.lower() in [
                     "🌐 выбрать язык", "выбрать язык", "язык",
-                    "choose language", "elegir idioma",
+                    "choose language", "elegir idioma"
                 ]
                 or text.lower() == get_translated_text(chat_id, "btn_language").lower()
             ):
@@ -81,21 +80,30 @@ async def telegram_webhook(req: Request):
                     **request_age_confirmation(chat_id)
                 )
 
-            # Возраст подтверждён — продолжаем
-            if text.lower() in ["/start", "каталог", "🛍 каталог"]:
+            # Каталог на всех языках
+            if text.lower() in [
+                "/start",
+                "каталог", "🛍 каталог",
+                "catalog", "🛍 catalog",
+                "catálogo", "🛍 catálogo"
+            ]:
                 return await handle_catalog_overview(chat_id, send_message)
 
+            # Элитный алкоголь
             if text.lower() in [
-                "ℹ️ информация", "информация", "о компании",
-                "ℹ️ информация о компании и партнёрах"
-            ]:
-                return await handle_info(chat_id, send_message)
-
-            if text.lower() in [
-                "🌟 элитный алкоголь", "👑 элитный алкоголь",
-                "элитный алкоголь", "премиум"
+                "🌟 элитный алкоголь", "👑 элитный алкоголь", "элитный алкоголь", "премиум",
+                "elite alcohol", "👑 elite alcohol",
+                "alcohol premium", "👑 alcohol premium"
             ]:
                 return await handle_elite(chat_id, send_message)
+
+            # Информация о компании
+            if text.lower() in [
+                "ℹ️ информация", "информация", "о компании", "ℹ️ информация о компании и партнёрах",
+                "company info", "ℹ️ company info",
+                "información de la empresa", "ℹ️ información de la empresa"
+            ]:
+                return await handle_info(chat_id, send_message)
 
             # По умолчанию отправляем меню
             return await send_message(
