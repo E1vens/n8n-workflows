@@ -23,7 +23,8 @@ def get_language_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-def get_translated_text(text_id: str, lang: str) -> str:
+def get_translated_text(chat_id: int, text_id: str) -> str:
+    lang = get_user_language(chat_id)
     translations = {
         "menu_prompt": {
             "ru": "Нажмите 🛍 Каталог",
