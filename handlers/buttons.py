@@ -1,5 +1,6 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from urllib.parse import quote
+from handlers.language import get_translated_text
 
 # ✅ Кнопки подтверждения возраста
 def get_age_confirmation_buttons():
@@ -11,12 +12,21 @@ def get_age_confirmation_buttons():
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-# ✅ Главное меню
-def get_main_menu():
+# ✅ Главное меню (в зависимости от языка)
+def get_main_menu(chat_id: int):
     keyboard = [
-        [KeyboardButton("🛍 Каталог"), KeyboardButton("👑 Элитный алкоголь")],
-        [KeyboardButton("🤖 ИИ консультант"), KeyboardButton("ℹ️ Информация о компании и партнёрах")],
-        [KeyboardButton("🌐 Выбрать язык"), KeyboardButton("🎁 Карта лояльности")]
+        [
+            KeyboardButton(f"🛍 {get_translated_text(chat_id, 'btn_catalog')}"),
+            KeyboardButton(f"👑 {get_translated_text(chat_id, 'btn_elite')}")
+        ],
+        [
+            KeyboardButton(f"🤖 {get_translated_text(chat_id, 'btn_ai')}"),
+            KeyboardButton(f"ℹ️ {get_translated_text(chat_id, 'btn_info')}")
+        ],
+        [
+            KeyboardButton(f"🌐 {get_translated_text(chat_id, 'btn_language')}"),
+            KeyboardButton(f"🎁 {get_translated_text(chat_id, 'btn_loyalty')}")
+        ]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True).to_dict()
 
