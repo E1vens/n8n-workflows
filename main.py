@@ -56,7 +56,35 @@ async def telegram_webhook(req: Request):
             text = text.strip()
             print(f"📩 Сообщение от пользователя: {text}")
 
-            # Выбор языка (работает для всех языков меню)
+            # --- БЛОК ВСЕХ ВАРИАНТОВ КОМАНД ---
+            if text.lower() in [
+                "/start",
+                "каталог", "🛍 каталог",
+                "catalog", "🛍 catalog",
+                "catálogo", "🛍 catálogo"
+            ]:
+                return await handle_catalog_overview(chat_id, send_message)
+
+            if text.lower() in [
+                "🌟 элитный алкоголь", "👑 элитный алкоголь", "элитный алкоголь", "премиум",
+                "elite alcohol", "👑 elite alcohol",
+                "alcohol premium", "👑 alcohol premium"
+            ]:
+                return await handle_elite(chat_id, send_message)
+
+            if text.lower() in [
+                "🤖 ии консультант", "ии консультант",
+                "ai assistant", "asistente ia"
+            ]:
+                # Твоя функция или заглушка
+                return await send_message(chat_id, "ИИ ассистент пока не реализован.")
+
+            if text.lower() in [
+                "ℹ️ информация", "информация", "о компании", "ℹ️ информация о компании и партнёрах",
+                "company info", "información de la empresa"
+            ]:
+                return await handle_info(chat_id, send_message)
+
             if (
                 text.lower() in [
                     "🌐 выбрать язык", "выбрать язык", "язык",
@@ -66,7 +94,7 @@ async def telegram_webhook(req: Request):
             ):
                 return await handle_language_selection(chat_id, send_message)
 
-            # Подтверждение возраста
+            # --- Проверка возраста (ДОЛЖНА БЫТЬ ПОСЛЕ ОСНОВНЫХ КОМАНД) ---
             if not is_confirmed(chat_id):
                 if text.startswith("age:"):
                     result = handle_age_confirmation(chat_id, text)
@@ -80,32 +108,7 @@ async def telegram_webhook(req: Request):
                     **request_age_confirmation(chat_id)
                 )
 
-            # Каталог на всех языках
-            if text.lower() in [
-                "/start",
-                "каталог", "🛍 каталог",
-                "catalog", "🛍 catalog",
-                "catálogo", "🛍 catálogo"
-            ]:
-                return await handle_catalog_overview(chat_id, send_message)
-
-            # Элитный алкоголь
-            if text.lower() in [
-                "🌟 элитный алкоголь", "👑 элитный алкоголь", "элитный алкоголь", "премиум",
-                "elite alcohol", "👑 elite alcohol",
-                "alcohol premium", "👑 alcohol premium"
-            ]:
-                return await handle_elite(chat_id, send_message)
-
-            # Информация о компании
-            if text.lower() in [
-                "ℹ️ информация", "информация", "о компании", "ℹ️ информация о компании и партнёрах",
-                "company info", "ℹ️ company info",
-                "información de la empresa", "ℹ️ información de la empresa"
-            ]:
-                return await handle_info(chat_id, send_message)
-
-            # По умолчанию отправляем меню
+            # --- По умолчанию отправляем главное меню ---
             return await send_message(
                 chat_id,
                 get_translated_text(chat_id, "menu_prompt"),
