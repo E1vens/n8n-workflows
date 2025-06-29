@@ -59,7 +59,10 @@ async def telegram_webhook(req: Request):
             text = text.strip()
             print(f"📩 Сообщение от пользователя: {text}")
 
-            if text.lower() in ["ℹ️ информация", "информация", "о компании"]:
+            if text.lower() in [
+                "ℹ️ информация", "информация", "о компании",
+                "ℹ️ информация о компании и партнёрах"
+            ]:
                 return await handle_info(chat_id, send_message)
 
             # 🔞 Проверка подтверждения возраста
