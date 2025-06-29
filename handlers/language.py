@@ -21,16 +21,6 @@ def get_language_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-"btn_age_yes": {"ru": "Да, мне есть 18", "en": "Yes, I'm over 18", "es": "Sí, tengo más de 18"},
-"btn_age_no": {"ru": "Нет", "en": "No", "es": "No"},
-"btn_catalog": {"ru": "Каталог", "en": "Catalog", "es": "Catálogo"},
-"btn_elite": {"ru": "Элитный алкоголь", "en": "Elite Alcohol", "es": "Alcohol Premium"},
-"btn_ai": {"ru": "ИИ консультант", "en": "AI Assistant", "es": "Asistente IA"},
-"btn_info": {"ru": "Информация о компании и партнёрах", "en": "Company Info", "es": "Información de la empresa"},
-"btn_language": {"ru": "Выбрать язык", "en": "Choose Language", "es": "Elegir idioma"},
-"btn_loyalty": {"ru": "Карта лояльности", "en": "Loyalty Card", "es": "Tarjeta de fidelidad"},
-
-
 def get_translated_text(chat_id: int, text_id: str) -> str:
     lang = get_user_language(chat_id)
     translations = {
@@ -69,71 +59,24 @@ def get_translated_text(chat_id: int, text_id: str) -> str:
             "en": "⚠️ No items found in *{category}*.",
             "es": "⚠️ No se encontraron artículos en *{category}*.",
         },
-        "price": {
-            "ru": "Цена",
-            "en": "Price",
-            "es": "Precio",
-        },
-        "volume": {
-            "ru": "Объём",
-            "en": "Volume",
-            "es": "Volumen",
-        },
-        "strength": {
-            "ru": "Крепость",
-            "en": "Strength",
-            "es": "Graduación",
-        },
-        "view_product": {
-            "ru": "🔗 Открыть товар",
-            "en": "🔗 View product",
-            "es": "🔗 Ver producto",
-        },
-        "back": {
-            "ru": "⬅️ Назад",
-            "en": "⬅️ Back",
-            "es": "⬅️ Atrás",
-        },
-        "next": {
-            "ru": "➡️ Далее",
-            "en": "➡️ Next",
-            "es": "➡️ Siguiente",
-        },
+        "price": {"ru": "Цена", "en": "Price", "es": "Precio"},
+        "volume": {"ru": "Объём", "en": "Volume", "es": "Volumen"},
+        "strength": {"ru": "Крепость", "en": "Strength", "es": "Graduación"},
+        "view_product": {"ru": "🔗 Открыть товар", "en": "🔗 View product", "es": "🔗 Ver producto"},
+        "back": {"ru": "⬅️ Назад", "en": "⬅️ Back", "es": "⬅️ Atrás"},
+        "next": {"ru": "➡️ Далее", "en": "➡️ Next", "es": "➡️ Siguiente"},
         "page_info": {
             "ru": "📄 Страница {page} из {total}",
             "en": "📄 Page {page} of {total}",
             "es": "📄 Página {page} de {total}",
         },
-        "btn_catalog": {
-            "ru": "Каталог",
-            "en": "Catalog",
-            "es": "Catálogo",
-        },
-        "btn_elite": {
-            "ru": "Элитный алкоголь",
-            "en": "Elite Alcohol",
-            "es": "Alcohol Premium",
-        },
-        "btn_ai": {
-            "ru": "ИИ консультант",
-            "en": "AI Assistant",
-            "es": "Asistente IA",
-        },
-        "btn_info": {
-            "ru": "Информация о компании и партнёрах",
-            "en": "Company Info",
-            "es": "Información de la empresa",
-        },
-        "btn_language": {
-            "ru": "Выбрать язык",
-            "en": "Choose Language",
-            "es": "Elegir idioma",
-        },
-        "btn_loyalty": {
-            "ru": "Карта лояльности",
-            "en": "Loyalty Card",
-            "es": "Tarjeta de fidelidad",
-        },
-
+        "btn_age_yes": {"ru": "Да, мне есть 18", "en": "Yes, I'm over 18", "es": "Sí, tengo más de 18"},
+        "btn_age_no": {"ru": "Нет", "en": "No", "es": "No"},
+        "btn_catalog": {"ru": "Каталог", "en": "Catalog", "es": "Catálogo"},
+        "btn_elite": {"ru": "Элитный алкоголь", "en": "Elite Alcohol", "es": "Alcohol Premium"},
+        "btn_ai": {"ru": "ИИ консультант", "en": "AI Assistant", "es": "Asistente IA"},
+        "btn_info": {"ru": "Информация о компании и партнёрах", "en": "Company Info", "es": "Información de la empresa"},
+        "btn_language": {"ru": "Выбрать язык", "en": "Choose Language", "es": "Elegir idioma"},
+        "btn_loyalty": {"ru": "Карта лояльности", "en": "Loyalty Card", "es": "Tarjeta de fidelidad"},
     }
     return translations.get(text_id, {}).get(lang, text_id)
