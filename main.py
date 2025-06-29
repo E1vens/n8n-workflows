@@ -119,4 +119,4 @@ async def telegram_webhook(req: Request):
     except Exception as e:
         print("❌ ГЛОБАЛЬНАЯ ОШИБКА:", str(e))
         traceback.print_exc()
-        return {"ok": True"}
+        return {"ok": True}
