@@ -1,5 +1,7 @@
 from handlers.buttons import get_age_confirmation_buttons, get_main_menu
+from handlers.language import get_translated_text
 
+# Хранилище подтверждённых пользователей
 confirmed_users = set()
 
 def is_confirmed(chat_id: int) -> bool:
@@ -17,15 +19,15 @@ def handle_age_confirmation(chat_id: int, text: str):
         confirm_user(chat_id)
         return {
             "text": "✅ Спасибо! Меню доступно:",
-            "reply_markup": get_main_menu()
+            "reply_markup": get_main_menu(chat_id)
         }
     else:
         return {
             "text": "🚫 Доступ запрещён. Повторите /start, если вам уже исполнилось 18."
         }
 
-def request_age_confirmation():
+def request_age_confirmation(chat_id: int):
     return {
-        "text": "Подтвердите, пожалуйста, что вам есть 18 лет:",
+        "text": get_translated_text(chat_id, "age_confirm"),
         "reply_markup": get_age_confirmation_buttons(chat_id)
     }
