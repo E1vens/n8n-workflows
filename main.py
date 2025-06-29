@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from handlers.catalog import handle_catalog_overview, handle_category_selection
 from config import TELEGRAM_API_URL
 from urllib.parse import unquote
+from handlers.buttons import get_main_menu
 import httpx
 import json
 
@@ -43,7 +44,7 @@ async def telegram_webhook(req: Request):
         if text == "🛍 Каталог":
             return await handle_catalog_overview(chat_id, send_message)
 
-        return await send_message(chat_id, "Нажмите 🛍 Каталог")
+        return await send_message(chat_id, "Нажмите 🛍 Каталог", reply_markup=get_main_menu())
 
     elif "callback_query" in data:
         chat_id = data["callback_query"]["from"]["id"]
