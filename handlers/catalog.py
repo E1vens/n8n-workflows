@@ -9,10 +9,27 @@ from hashlib import sha1
 PAGE_SIZE = 5
 category_map = {}
 
+# Переводы названий категорий
+CATEGORY_TRANSLATIONS = {
+    "Виски": {"ru": "Виски", "en": "Whisky", "es": "Whisky"},
+    "Водка": {"ru": "Водка", "en": "Vodka", "es": "Vodka"},
+    "Джин": {"ru": "Джин", "en": "Gin", "es": "Ginebra"},
+    "Вино": {"ru": "Вино", "en": "Wine", "es": "Vino"},
+    "Крепкое вино": {"ru": "Крепкое вино", "en": "Fortified wine", "es": "Vino fortificado"},
+    "Шампанское и игристое": {"ru": "Шампанское и игристое", "en": "Sparkling wine", "es": "Vino espumoso"},
+    "Коньяк и Арманьяк": {"ru": "Коньяк и Арманьяк", "en": "Cognac & Armagnac", "es": "Coñac y Armagnac"},
+    "Кальвадос": {"ru": "Кальвадос", "en": "Calvados", "es": "Calvados"},
+    "Другие": {"ru": "Другие", "en": "Other", "es": "Otros"},
+}
+
+def translate_category(cat, lang):
+    return CATEGORY_TRANSLATIONS.get(cat, {}).get(lang, cat)
+
 # 👉 Категории (при нажатии на кнопку "Каталог")
 async def handle_catalog_overview(chat_id: int, send_message):
     print("✅ handle_catalog_overview вызван")
 
+    lang = get_user_language(chat_id)
     categories = await run_in_threadpool(get_distinct_categories)
     print("📦 Категории из Supabase:", categories)
 
@@ -23,7 +40,8 @@ async def handle_catalog_overview(chat_id: int, send_message):
     for cat in categories:
         cat_id = sha1(cat.encode()).hexdigest()[:8]
         category_map[cat_id] = cat
-        keyboard.append([InlineKeyboardButton(text=cat, callback_data=f"cat|{cat_id}|1")])
+        display_name = translate_category(cat, lang)
+        keyboard.append([InlineKeyboardButton(text=display_name, callback_data=f"cat|{cat_id}|1")])
 
     markup = InlineKeyboardMarkup(keyboard).to_dict()
     return await send_message(chat_id, get_translated_text(chat_id, "select_category"), reply_markup=markup)
@@ -46,10 +64,10 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
 
     for product in products:
         text = (
-            f"*{product.get('title', 'Без названия')}*\n"
-            f"{get_translated_text(chat_id, 'price')}: {product.get('price', '?')}₽\n"
+            f"*{product.get('title', 'Без названия')}*\\n"
+            f"{get_translated_text(chat_id, 'price')}: {product.get('price', '?')}₽\\n"
             f"{get_translated_text(chat_id, 'volume')}: {product.get('volume', '?')} • "
-            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}\n"
+            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}\\n"
             f"[🔗 {get_translated_text(chat_id, 'view_product')}]({product.get('product_url', '#')})"
         )
         await send_message(chat_id, text, photo=product.get("image_url"))
