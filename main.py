@@ -138,13 +138,8 @@ async def telegram_webhook(req: Request):
                 set_user_language(chat_id, lang_code)
 
                 await send_message(chat_id, ".", reply_markup={"remove_keyboard": True})
-                await send_message(chat_id, get_translated_text(chat_id, "language_set"))
+                return await send_message(chat_id, get_translated_text(chat_id, "language_set"))
 
-                return await send_message(
-                    chat_id,
-                    text=get_translated_text(chat_id, "menu_prompt"),
-                    reply_markup=get_main_menu(chat_id)
-                )
 
             if data_value.startswith("cat|"):
                 try:
