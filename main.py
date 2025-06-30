@@ -132,7 +132,7 @@ async def telegram_webhook(req: Request):
                 "🎁 Loyalty Card", "loyalty card",
                 "🎁 Tarjeta de fidelidad", "tarjeta de fidelidad"
             ]:
-                if await register_loyalty_card(chat_id):
+                if register_loyalty_card(chat_id):
                     return await send_message(chat_id, "🎉 Ваша карта лояльности успешно создана!")
                 else:
                     return await send_message(chat_id, "✅ У вас уже есть карта лояльности.")
