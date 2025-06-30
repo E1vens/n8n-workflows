@@ -87,9 +87,9 @@ async def telegram_webhook(req: Request):
 
             # --- Команда Каталог ---
             if text.lower() in [
-                "каталог", "🍭 каталог",
-                "catalog", "🍭 catalog",
-                "catálogo", "🍭 catálogo"
+                "каталог", "🛍 каталог",
+                "catalog", "🛍 catalog",
+                "catálogo", "🛍 catálogo"
             ]:
                 return await handle_catalog_overview(chat_id, send_message)
 
