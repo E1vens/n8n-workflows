@@ -132,10 +132,18 @@ async def telegram_webhook(req: Request):
                 "🎁 Loyalty Card", "loyalty card",
                 "🎁 Tarjeta de fidelidad", "tarjeta de fidelidad"
             ]:
-                if register_loyalty_card(chat_id):
+                status = register_loyalty_card(chat_id)
+                if status == "created":
                     return await send_message(chat_id, "🎉 Ваша карта лояльности успешно создана!")
+                elif status == "exists":
+                    return await send_message(chat_id,
+                        "🎁 *Ваша карта лояльности уже активна!*\n\n"
+                        "• Уровень: `Bronze`\n"
+                        "• Заказов: `0`\n\n"
+                        "Накопите больше — получите бонусы! 💎"
+                    )
                 else:
-                    return await send_message(chat_id, "✅ У вас уже есть карта лояльности.")
+                    return await send_message(chat_id, "⚠️ Не удалось проверить карту. Попробуйте позже.")
 
             # --- По умолчанию ---
             return await send_message(
@@ -143,6 +151,7 @@ async def telegram_webhook(req: Request):
                 text=get_translated_text(chat_id, "menu_prompt"),
                 reply_markup=get_main_menu(chat_id)
             )
+
 
         # --- Callback Query ---
         elif "callback_query" in data:
