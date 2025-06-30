@@ -84,7 +84,7 @@ async def telegram_webhook(req: Request):
                     reply_markup=get_main_menu(chat_id)
                 )
 
-            # --- Команда Каталог (после подтверждения возраста) ---
+            # --- Команда Каталог ---
             if text.lower() in [
                 "каталог", "🛍 каталог",
                 "catalog", "🛍 catalog",
@@ -92,6 +92,7 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_catalog_overview(chat_id, send_message)
 
+            # --- Элитный алкоголь ---
             if text.lower() in [
                 "🌟 элитный алкоголь", "👑 элитный алкоголь", "элитный алкоголь", "премиум",
                 "elite alcohol", "👑 elite alcohol",
@@ -99,12 +100,14 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_elite(chat_id, send_message)
 
+            # --- ИИ консультант ---
             if text.lower() in [
                 "🤖 ии консультант", "ии консультант",
                 "ai assistant", "asistente ia"
             ]:
                 return await send_message(chat_id, "ИИ ассистент пока не реализован.")
 
+            # --- Информация о компании ---
             if text.strip() in [
                 get_translated_text(chat_id, "btn_info"),
                 "ℹ️ Информация о компании и партнёрах",
@@ -113,6 +116,7 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_info(chat_id, send_message)
 
+            # --- Выбор языка ---
             if text.strip() in [
                 get_translated_text(chat_id, "btn_language"),
                 "🌐 Выбрать язык", "Выбрать язык", "язык",
@@ -121,12 +125,26 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_language_selection(chat_id, send_message)
 
+            # --- Карта лояльности ---
+            if text.strip() in [
+                get_translated_text(chat_id, "btn_loyalty"),
+                "🎁 Карта лояльности", "карта лояльности",
+                "🎁 Loyalty Card", "loyalty card",
+                "🎁 Tarjeta de fidelidad", "tarjeta de fidelidad"
+            ]:
+                if await register_loyalty_card(chat_id):
+                    return await send_message(chat_id, "🎉 Ваша карта лояльности успешно создана!")
+                else:
+                    return await send_message(chat_id, "✅ У вас уже есть карта лояльности.")
+
+            # --- По умолчанию ---
             return await send_message(
                 chat_id,
                 text=get_translated_text(chat_id, "menu_prompt"),
                 reply_markup=get_main_menu(chat_id)
             )
 
+        # --- Callback Query ---
         elif "callback_query" in data:
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
@@ -140,15 +158,12 @@ async def telegram_webhook(req: Request):
             if data_value.startswith("lang:"):
                 lang_code = data_value.split(":")[1]
                 set_user_language(chat_id, lang_code)
-
-
                 return await send_message(
                     chat_id,
                     text=get_translated_text(chat_id, "language_set"),
                     reply_markup=get_main_menu(chat_id)
                 )
 
-                
             if data_value.startswith("cat|"):
                 try:
                     _, cat_id, page = data_value.split("|")
