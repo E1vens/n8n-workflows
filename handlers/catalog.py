@@ -88,7 +88,12 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
         InlineKeyboardButton("🔼 Цена: сначала дорогие", callback_data=f"cat|{cat_id}|1|price.desc")
     ]
 
-    markup = InlineKeyboardMarkup([nav_buttons] if nav_buttons else [] + [sort_buttons]).to_dict()
+    all_buttons = []
+    if nav_buttons:
+        all_buttons.append(nav_buttons)
+    all_buttons.append(sort_buttons)
+
+    markup = InlineKeyboardMarkup(all_buttons).to_dict()
     await send_message(
         chat_id,
         get_translated_text(chat_id, "page_info").replace("{page}", str(page)).replace("{total}", str(total_pages)),
