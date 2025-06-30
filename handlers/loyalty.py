@@ -1,8 +1,8 @@
-from supabase import create_client
+#from supabase import create_client
 from config import SUPABASE_URL, SUPABASE_KEY
 from datetime import datetime
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+#supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Регистрируем пользователя в loyalty_cards (если нет)
 async def register_loyalty_card(chat_id: int):
