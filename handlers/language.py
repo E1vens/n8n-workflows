@@ -179,7 +179,7 @@ async def auto_translate_if_needed(chat_id: int, text_ru: str) -> str:
     try:
         target_lang = {"en": "English", "es": "Spanish"}.get(lang, "English")
 
-        response = await openai.ChatCompletion.acreate(
+        response = await client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": f"Translate this text into {target_lang}. Preserve formatting and markdown."},
