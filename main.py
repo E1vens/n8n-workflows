@@ -52,7 +52,7 @@ async def telegram_webhook(req: Request):
             text = message.get("text")
 
             if not text:
-                print("📭 Пустое сообщение — игнорируем")
+                print("📟 Пустое сообщение — игнорируем")
                 return {"ok": True}
 
             text = text.strip()
@@ -87,9 +87,9 @@ async def telegram_webhook(req: Request):
 
             # --- Команда Каталог ---
             if text.lower() in [
-                "каталог", "🛍 каталог",
-                "catalog", "🛍 catalog",
-                "catálogo", "🛍 catálogo"
+                "каталог", "🍭 каталог",
+                "catalog", "🍭 catalog",
+                "catálogo", "🍭 catálogo"
             ]:
                 return await handle_catalog_overview(chat_id, send_message)
 
@@ -145,11 +145,39 @@ async def telegram_webhook(req: Request):
                         f"🎁 *Ваша карта лояльности уже активна!*\n\n"
                         f"• Уровень: `{tier}`\n"
                         f"• Заказов: `{total_orders}`\n\n"
-                        f"Накопите больше — получите бонусы! 💎"
+                        f"Накопите больше — получите бонусы! 💾"
                     )
 
                 else:
                     return await send_message(chat_id, "⚠️ Не удалось проверить карту. Попробуйте позже.")
+
+            # --- Баланс / Статистика ---
+            if text.lower() in ["/баланс", "/статистика", "баланс", "статистика"]:
+                status, data = await run_in_threadpool(register_loyalty_card, chat_id)
+
+                if status == "exists":
+                    total = data.get("total_amount", 0) or 0
+                    total = float(total)
+
+                    if total >= 1_000_000:
+                        tier = "Gold"
+                        bonus_info = "Скидка 10% и приоритетная поддержка 👑"
+                    elif total >= 100_000:
+                        tier = "Silver"
+                        bonus_info = "Скидка 5% на все покупки 🎉"
+                    else:
+                        tier = "Bronze"
+                        bonus_info = "1% бонус за каждую покупку 😊"
+
+                    return await send_message(chat_id,
+                        f"📊 *Ваша карта лояльности:*\n\n"
+                        f"• Уровень: `{tier}`\n"
+                        f"• Сумма покупок: `{int(total):,}₽`\n"
+                        f"• Бонусы: {bonus_info}\n\n"
+                        f"Продолжайте заказывать — и получите больше! 💼"
+                    )
+                else:
+                    return await send_message(chat_id, "⚠️ Не удалось получить данные карты.")
 
             # --- По умолчанию ---
             return await send_message(
@@ -158,13 +186,12 @@ async def telegram_webhook(req: Request):
                 reply_markup=get_main_menu(chat_id)
             )
 
-
         # --- Callback Query ---
         elif "callback_query" in data:
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "").strip()
-            print(f"📲 Callback получен: {data_value}")
+            print(f"🔢 Callback получен: {data_value}")
 
             if data_value.startswith("age:"):
                 result = handle_age_confirmation(chat_id, data_value)
