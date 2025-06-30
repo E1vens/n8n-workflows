@@ -115,5 +115,91 @@ def get_translated_text(chat_id: int, text_id: str) -> str:
             "en": "Loyalty Card",
             "es": "Tarjeta de fidelidad",
         },
+        "company_info": {
+            "ru": """*О компании ВЕЛЬД-21*
+
+Ведущий импортер крепкого алкоголя, строим бренды уже более 25 лет.
+Основана в 1996 году — с тех пор мы расширили своё присутствие от Владивостока до Калининграда, от Мурманска до Владикавказа.
+
+• Более 1000 дистрибьюторов в 87 ключевых городах РФ — охват 56 000+ торговых точек.
+• Работаем с 50 федеральными и региональными сетями.
+• Экспертный подбор, персональный подход, ведущие поставщики, безупречная репутация.
+
+*Наш путь*:
+- 1996: Основание компании и первые поставки вин Grand Cru.
+- 1999: Дистрибуция Macallan.
+- 2003: Первый бутик.
+- 2004: Запуск ВЕЛЬД-СПб.
+- 2006–2015: Контракт с Suntory на японский и шотландский виски.
+- 2015: Новый склад с высоким стандартом хранения.
+- 2016: Портфель 'Лучшие крепкие напитки мира'.
+- 2021: Расширение ассортимента — самый большой выбор с 1996 года.
+
+*Команда и обучение*:
+Мы ценим профессионализм. Проводим лекции, туры, каталоги и обучающие курсы по алкоголю.
+
+*Наш портфель*:
+Импортируем лучшие продукты в своих категориях, большинство — на эксклюзивной основе.
+
+📦 Подробнее: veld21.ru
+📧 Партнёрство: info@veld-21.ru""",
+
+            "en": """*About VELD-21*
+
+A leading importer of strong alcohol, building brands for over 25 years.
+Founded in 1996 — since then we have expanded our presence from Vladivostok to Kaliningrad, from Murmansk to Vladikavkaz.
+
+• 1,000+ distributors in 87 key Russian cities — reaching over 56,000 outlets.
+• Working with 50 federal and regional retail chains.
+• Expert selection, personal approach, top suppliers, impeccable reputation.
+
+*Our history*:
+- 1996: Company founded, first Grand Cru wine shipments.
+- 1999: Macallan distribution.
+- 2003: First boutique.
+- 2004: Launch of VELD-SPb.
+- 2006–2015: Suntory contract for Japanese and Scotch whisky.
+- 2015: New high-standard warehouse.
+- 2016: ‘World’s Best Spirits’ portfolio.
+- 2021: Expanded assortment — largest since 1996.
+
+*Team & Education*:
+We value professionalism. We host lectures, tastings, catalogs, and training courses on alcohol.
+
+*Our portfolio*:
+We import the best products in their categories, most on an exclusive basis.
+
+📦 More: veld21.ru
+📧 Partnerships: info@veld-21.ru""",
+
+            "es": """*Sobre VELD-21*
+
+Importador líder de alcohol fuerte, construyendo marcas desde hace más de 25 años.
+Fundada en 1996 — desde entonces hemos expandido nuestra presencia desde Vladivostok hasta Kaliningrado, de Murmansk hasta Vladikavkaz.
+
+• Más de 1.000 distribuidores en 87 ciudades clave de Rusia — con cobertura en más de 56.000 puntos de venta.
+• Colaboramos con 50 cadenas minoristas federales y regionales.
+• Selección experta, enfoque personalizado, proveedores líderes, reputación impecable.
+
+*Nuestra historia*:
+- 1996: Fundación de la empresa y primeros envíos de vinos Grand Cru.
+- 1999: Distribución de Macallan.
+- 2003: Primera boutique.
+- 2004: Lanzamiento de VELD-SPb.
+- 2006–2015: Contrato con Suntory para whisky japonés y escocés.
+- 2015: Nuevo almacén con altos estándares.
+- 2016: Portafolio ‘Los mejores licores del mundo’.
+- 2021: Expansión del surtido — la mayor desde 1996.
+
+*Equipo y educación*:
+Valoramos el profesionalismo. Organizamos conferencias, recorridos, catálogos y formación sobre alcohol.
+
+*Nuestro portafolio*:
+Importamos los mejores productos en cada categoría, la mayoría en base exclusiva.
+
+📦 Más: veld21.ru
+📧 Asociación: info@veld-21.ru"""
+        },
+
     }
     return translations.get(text_id, {}).get(lang, text_id)
