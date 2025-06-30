@@ -5,7 +5,7 @@ from fastapi import Request
 import httpx
 
 # Функция регистрации или проверки карты в Supabase через REST API
-def register_loyalty_card(chat_id: int) -> str:
+def register_loyalty_card(chat_id: int) -> tuple[str, dict | None]:
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
@@ -19,7 +19,7 @@ def register_loyalty_card(chat_id: int) -> str:
         if resp.status_code == 200:
             data = resp.json()
             if data:
-                return "exists", data[0]  # Возвращаем статус и данные карты
+                return "exists", data[0]  # ✅ Карта найдена — возвращаем и выходим
         else:
             print("❌ Проверка карты: ошибка", resp.status_code, resp.text)
             return "error", None
@@ -27,7 +27,7 @@ def register_loyalty_card(chat_id: int) -> str:
         print("❌ Ошибка при проверке карты:", e)
         return "error", None
 
-    # Если карты нет — создаём новую
+    # ⛳ Если карта не найдена — создаём
     insert_url = f"{SUPABASE_URL}/rest/v1/loyalty_cards"
     payload = [{
         "chat_id": str(chat_id),
@@ -44,6 +44,7 @@ def register_loyalty_card(chat_id: int) -> str:
     except Exception as e:
         print("❌ Ошибка регистрации карты:", e)
         return "error", None
+
 
 # Асинхронная функция отправки сообщений через Telegram API
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
