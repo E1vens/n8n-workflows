@@ -195,7 +195,11 @@ async def telegram_webhook(req: Request):
 
             if data_value.startswith("age:"):
                 result = handle_age_confirmation(chat_id, data_value)
-                return await send_message(chat_id, result["text"], reply_markup=result.get("reply_markup"))
+                return await send_message(
+                    chat_id,
+                    text=result["text"],
+                    reply_markup=result.get("reply_markup")
+                )
 
             if data_value.startswith("lang:"):
                 lang_code = data_value.split(":")[1]
