@@ -67,7 +67,7 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
     }
 
     params = {
-        "select": "*",
+        "select": "id,title,price,volume,strength,metadata->>image,metadata",
         "category": f"eq.{category}",
         "order": f"price.{sort}"
     }
