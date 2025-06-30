@@ -2,6 +2,7 @@ import requests
 from config import SUPABASE_URL, SUPABASE_KEY
 from datetime import datetime
 from fastapi import Request
+import traceback
 import httpx
 
 # Функция регистрации или проверки карты в Supabase через REST API
@@ -19,15 +20,16 @@ def register_loyalty_card(chat_id: int) -> tuple[str, dict | None]:
         if resp.status_code == 200:
             data = resp.json()
             if data:
-                return "exists", data[0]  # ✅ Карта найдена — возвращаем и выходим
+                return "exists", data[0]
         else:
             print("❌ Проверка карты: ошибка", resp.status_code, resp.text)
             return "error", None
     except Exception as e:
         print("❌ Ошибка при проверке карты:", e)
+        print(traceback.format_exc())
         return "error", None
 
-    # ⛳ Если карта не найдена — создаём
+    # Если карты нет — создаём новую
     insert_url = f"{SUPABASE_URL}/rest/v1/loyalty_cards"
     payload = [{
         "chat_id": str(chat_id),
@@ -43,6 +45,7 @@ def register_loyalty_card(chat_id: int) -> tuple[str, dict | None]:
         return "created", None
     except Exception as e:
         print("❌ Ошибка регистрации карты:", e)
+        print(traceback.format_exc())
         return "error", None
 
 
