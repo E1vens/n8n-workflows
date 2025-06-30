@@ -1,7 +1,7 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from fastapi.concurrency import run_in_threadpool
 from utils.supabase import get_top_products_by_category, get_distinct_categories
-from handlers.language import get_user_language
+from handlers.language import get_user_language, auto_translate_if_needed
 from math import ceil
 from urllib.parse import quote
 from hashlib import sha1
