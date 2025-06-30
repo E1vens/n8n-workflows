@@ -5,6 +5,7 @@ from handlers.age import is_confirmed, request_age_confirmation, handle_age_conf
 from handlers.info import handle_info
 from handlers.elite import handle_elite
 from handlers.language import handle_language_selection, set_user_language, get_translated_text
+from handlers.loyalty import register_loyalty_card
 from config import TELEGRAM_API_URL
 import httpx
 import json
@@ -74,6 +75,8 @@ async def telegram_webhook(req: Request):
             if text.lower() == "/start":
                 if not is_confirmed(chat_id):
                     return await send_message(chat_id, **request_age_confirmation(chat_id))
+
+                await register_loyalty_card(chat_id)
 
                 return await send_message(
                     chat_id,
