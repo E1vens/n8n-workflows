@@ -1,5 +1,6 @@
 from handlers.language import auto_translate_if_needed
 
+# Русский текст по умолчанию
 info_ru = """*О компании ВЕЛЬД-21*
 
 Ведущий импортер крепкого алкоголя, строим бренды уже более 25 лет.
@@ -25,9 +26,10 @@ info_ru = """*О компании ВЕЛЬД-21*
 *Наш портфель*:
 Импортируем лучшие продукты в своих категориях, большинство — на эксклюзивной основе.
 
-📦 Подробнее: veld21.ru
+📦 Подробнее: veld21.ru  
 📧 Партнёрство: info@veld-21.ru"""
 
+# Обработчик кнопки
 async def handle_info(chat_id: int, send_message):
     text = await auto_translate_if_needed(chat_id, info_ru)
-    await send_message(chat_id, text)
+    await send_message(chat_id, text, reply_markup=None)
