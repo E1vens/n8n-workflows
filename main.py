@@ -89,7 +89,6 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_catalog_overview(chat_id, send_message)
 
-
             if text.lower() in [
                 "🌟 элитный алкоголь", "👑 элитный алкоголь", "элитный алкоголь", "премиум",
                 "elite alcohol", "👑 elite alcohol",
@@ -103,9 +102,11 @@ async def telegram_webhook(req: Request):
             ]:
                 return await send_message(chat_id, "ИИ ассистент пока не реализован.")
 
-            if text.lower() in [
-                "ℹ️ информация", "информация", "о компании", "ℹ️ информация о компании и партнёрах",
-                "company info", "información de la empresa"
+            if text.strip() in [
+                get_translated_text(chat_id, "btn_info"),
+                "ℹ️ Информация о компании и партнёрах",
+                "ℹ️ Company Info",
+                "ℹ️ Información de la empresa"
             ]:
                 return await handle_info(chat_id, send_message)
 
