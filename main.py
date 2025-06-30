@@ -70,14 +70,25 @@ async def telegram_webhook(req: Request):
                     **request_age_confirmation(chat_id)
                 )
 
-            # --- Команды ---
+            # --- Обработка команды /start ---
+            if text.lower() == "/start":
+                if not is_confirmed(chat_id):
+                    return await send_message(chat_id, **request_age_confirmation(chat_id))
+
+                return await send_message(
+                    chat_id,
+                    get_translated_text(chat_id, "menu_prompt"),
+                    reply_markup=get_main_menu(chat_id)
+                )
+
+            # --- Команда Каталог (после подтверждения возраста) ---
             if text.lower() in [
-                "/start",
                 "каталог", "🛍 каталог",
                 "catalog", "🛍 catalog",
                 "catálogo", "🛍 catálogo"
             ]:
                 return await handle_catalog_overview(chat_id, send_message)
+
 
             if text.lower() in [
                 "🌟 элитный алкоголь", "👑 элитный алкоголь", "элитный алкоголь", "премиум",
