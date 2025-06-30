@@ -31,7 +31,39 @@ def get_language_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-# Главный словарь переводов
+# ✅ Синхронная функция для перевода кнопок (без GPT)
+def get_translated_text(chat_id: int, text_id: str) -> str:
+    lang = get_user_language(chat_id)
+    return (
+        translations.get(text_id, {}).get(lang)
+        or translations.get(text_id, {}).get("ru")
+        or text_id
+    )
+
+# ✅ Асинхронная функция для автоперевода длинных текстов
+async def auto_translate_if_needed(chat_id: int, text_ru: str) -> str:
+    lang = get_user_language(chat_id)
+    if lang == "ru":
+        return text_ru
+
+    try:
+        target_lang = {"en": "English", "es": "Spanish"}.get(lang, "English")
+
+        response = await openai.ChatCompletion.acreate(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": f"Translate this text into {target_lang}. Preserve formatting and markdown."},
+                {"role": "user", "content": text_ru}
+            ]
+        )
+
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        print(f"❌ Ошибка перевода через GPT: {e}")
+        return text_ru
+
+# 🧩 Словарь переводов
 translations = {
     "menu_prompt": {
         "ru": "Нажмите 🛍 Каталог",
@@ -137,6 +169,7 @@ translations = {
 📧 Партнёрство: info@veld-21.ru"""
     }
 }
+
 
 # С автопереводом при отсутствии перевода
 async def auto_translate_if_needed(chat_id: int, text_ru: str) -> str:
