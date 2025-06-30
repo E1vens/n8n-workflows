@@ -36,6 +36,9 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
 async def telegram_webhook(req: Request):
     print("📥 Получен запрос от Telegram")
 
+    data = await req.json()
+    print("📦 Данные от Telegram:", json.dumps(data, indent=2, ensure_ascii=False))
+
     try:
         data = await req.json()
         print("📦 Данные:", json.dumps(data, indent=2, ensure_ascii=False))
