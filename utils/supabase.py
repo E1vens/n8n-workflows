@@ -20,18 +20,18 @@ def get_distinct_categories():
         print("❌ Ошибка получения категорий:", e)
         return []
 
-# 📦 Товары по категории
+# 📦 Уникальные товары по категории (с фильтрацией по title)
 def get_top_products_by_category(category: str, limit: int = 5):
     url = f"{SUPABASE_URL}/rest/v1/documents"
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Range": f"0-{limit - 1}",
+        "Range": f"0-99",
         "Range-Unit": "items"
     }
 
     params = {
-        "select": "*",
+        "select": "title,price,volume,strength,metadata->>url,metadata->>photo",
         "category": f"eq.{category}",
         "order": "price.asc"
     }
@@ -39,7 +39,19 @@ def get_top_products_by_category(category: str, limit: int = 5):
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        return response.json()
+        all_items = response.json()
+
+        seen_titles = set()
+        unique_items = []
+        for item in all_items:
+            title = item.get("title")
+            if title and title not in seen_titles:
+                unique_items.append(item)
+                seen_titles.add(title)
+            if len(unique_items) >= limit:
+                break
+
+        return unique_items
     except Exception as e:
         print(f"❌ Ошибка получения товаров по категории '{category}':", e)
         return []
