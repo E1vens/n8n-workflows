@@ -13,7 +13,11 @@ def confirm_user(chat_id: int):
 
 def request_age_confirmation(chat_id: int) -> dict:
     return {
-        "text": get_translated_text(chat_id, "age_confirm"),
+        "text": (
+            "🔞 *Возрастное ограничение!*\n\n"
+            "Этот бот содержит информацию, предназначенную только для совершеннолетних.\n\n"
+            "Пожалуйста, подтвердите, что вам уже исполнилось 18 лет:"
+        ),
         "reply_markup": get_age_confirmation_buttons(chat_id)
     }
 
@@ -24,16 +28,15 @@ def handle_age_confirmation(chat_id: int, text: str) -> dict:
     if cleaned == "age:yes":
         confirm_user(chat_id)
         return {
-            "text": get_translated_text(chat_id, "language_set"),  # Можно заменить на любое финальное сообщение
-            "reply_markup": get_main_menu(chat_id)
+            "text": (
+                "✅ *Возраст подтверждён!*\n\n"
+                "Теперь вы можете просматривать каталог и использовать все функции бота. 🍷"
+            ),
+            "reply_markup": get_main_menu(chat_id),
+            "confirmed": True
         }
     else:
         return {
-            "text": "🚫 Доступ запрещён. Повторите /start, если вам уже исполнилось 18."
+            "text": "🚫 Доступ запрещён. Повторите /start, если вам уже исполнилось 18.",
+            "confirmed": False
         }
-
-def request_age_confirmation(chat_id: int):
-    return {
-        "text": get_translated_text(chat_id, "age_confirm"),
-        "reply_markup": get_age_confirmation_buttons(chat_id)
-    }
