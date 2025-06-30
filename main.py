@@ -6,6 +6,7 @@ from handlers.info import handle_info
 from handlers.elite import handle_elite
 from handlers.language import handle_language_selection, set_user_language, get_translated_text
 from handlers.loyalty import register_loyalty_card
+from fastapi.concurrency import run_in_threadpool
 from config import TELEGRAM_API_URL
 import httpx
 import json
@@ -132,7 +133,7 @@ async def telegram_webhook(req: Request):
                 "🎁 Loyalty Card", "loyalty card",
                 "🎁 Tarjeta de fidelidad", "tarjeta de fidelidad"
             ]:
-                status = register_loyalty_card(chat_id)
+                status = await run_in_threadpool(register_loyalty_card, chat_id)
                 if status == "created":
                     return await send_message(chat_id, "🎉 Ваша карта лояльности успешно создана!")
                 elif status == "exists":
