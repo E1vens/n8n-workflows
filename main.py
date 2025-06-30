@@ -208,8 +208,11 @@ async def telegram_webhook(req: Request):
 
             if data_value.startswith("cat|"):
                 try:
-                    _, cat_id, page = data_value.split("|")
-                    return await handle_category_selection(chat_id, cat_id, send_message, int(page))
+                    parts = data_value.split("|")
+                    cat_id = parts[1]
+                    page = int(parts[2])
+                    sort = parts[3] if len(parts) > 3 else "asc"
+                    return await handle_category_selection(chat_id, cat_id, send_message, page, sort)
                 except Exception as e:
                     print("❌ Ошибка разбора callback 'cat|...':", e)
                     return await send_message(chat_id, "⚠️ Не удалось загрузить товары.")
@@ -220,3 +223,4 @@ async def telegram_webhook(req: Request):
         print("❌ ГЛОБАЛЬНАЯ ОШИБКА:", str(e))
         traceback.print_exc()
         return {"ok": True}
+        
