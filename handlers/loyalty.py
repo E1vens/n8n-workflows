@@ -9,7 +9,7 @@ def register_loyalty_card(chat_id: int) -> str:
         "Content-Type": "application/json"
     }
 
-    check_url = f"{SUPABASE_URL}/rest/v1/loyalty_cards?select=id&Chat_ID=eq.{chat_id}"
+    check_url = f"{SUPABASE_URL}/rest/v1/loyalty_cards?select=id&chat_id=eq.{chat_id}"
 
     try:
         resp = requests.get(check_url, headers=headers)
@@ -26,7 +26,7 @@ def register_loyalty_card(chat_id: int) -> str:
     # Если не существует — создаём
     insert_url = f"{SUPABASE_URL}/rest/v1/loyalty_cards"
     payload = [{
-        "Chat_ID": str(chat_id),
+        "chat_id": str(chat_id),
         "tier": "bronze",
         "total_orders": 0,
         "birthday": None,
