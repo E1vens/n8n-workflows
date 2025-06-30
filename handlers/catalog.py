@@ -1,15 +1,13 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from fastapi.concurrency import run_in_threadpool
-from utils.supabase import get_top_products_by_category, get_distinct_categories
+from utils.supabase import match_documents_by_category, get_distinct_categories
 from handlers.language import get_user_language, get_translated_text
 from math import ceil
-from urllib.parse import quote
 from hashlib import sha1
 
 PAGE_SIZE = 5
 category_map = {}
 
-# Переводы названий категорий
 CATEGORY_TRANSLATIONS = {
     "Виски": {"ru": "Виски", "en": "Whisky", "es": "Whisky"},
     "Водка": {"ru": "Водка", "en": "Vodka", "es": "Vodka"},
@@ -41,18 +39,18 @@ async def handle_catalog_overview(chat_id: int, send_message):
         cat_id = sha1(cat.encode()).hexdigest()[:8]
         category_map[cat_id] = cat
         display_name = translate_category(cat, lang)
-        keyboard.append([InlineKeyboardButton(text=display_name, callback_data=f"cat|{cat_id}|1")])
+        keyboard.append([InlineKeyboardButton(text=display_name, callback_data=f"cat|{cat_id}|1|price.asc")])
 
     markup = InlineKeyboardMarkup(keyboard).to_dict()
     return await send_message(chat_id, get_translated_text(chat_id, "select_category"), reply_markup=markup)
 
 # 👉 Товары по категории
-async def handle_category_selection(chat_id: int, cat_id: str, send_message, page: int = 1):
+async def handle_category_selection(chat_id: int, cat_id: str, send_message, page: int = 1, sort: str = "price.asc"):
     category = category_map.get(cat_id)
     if not category:
         return await send_message(chat_id, get_translated_text(chat_id, "unknown_category"))
 
-    all_products = await run_in_threadpool(get_top_products_by_category, category, limit=1000)
+    all_products = await run_in_threadpool(match_documents_by_category, category, sort.split(".")[-1], 1, 1000)
     if not all_products:
         return await send_message(chat_id, get_translated_text(chat_id, "empty_category").replace("{category}", category))
 
@@ -81,19 +79,18 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
 
     nav_buttons = []
     if page > 1:
-        nav_buttons.append(InlineKeyboardButton(get_translated_text(chat_id, "back"), callback_data=f"cat|{cat_id}|{page - 1}"))
+        nav_buttons.append(InlineKeyboardButton(get_translated_text(chat_id, "back"), callback_data=f"cat|{cat_id}|{page - 1}|{sort}"))
     if page < total_pages:
-        nav_buttons.append(InlineKeyboardButton(get_translated_text(chat_id, "next"), callback_data=f"cat|{cat_id}|{page + 1}"))
+        nav_buttons.append(InlineKeyboardButton(get_translated_text(chat_id, "next"), callback_data=f"cat|{cat_id}|{page + 1}|{sort}"))
 
-    if nav_buttons:
-        markup = InlineKeyboardMarkup([nav_buttons]).to_dict()
-        await send_message(
-            chat_id,
-            get_translated_text(chat_id, "page_info").replace("{page}", str(page)).replace("{total}", str(total_pages)),
-            reply_markup=markup
-        )
-    else:
-        await send_message(
-            chat_id,
-            get_translated_text(chat_id, "page_info").replace("{page}", str(page)).replace("{total}", str(total_pages))
-        )
+    sort_buttons = [
+        InlineKeyboardButton("🔽 Цена: сначала дешёвые", callback_data=f"cat|{cat_id}|1|price.asc"),
+        InlineKeyboardButton("🔼 Цена: сначала дорогие", callback_data=f"cat|{cat_id}|1|price.desc")
+    ]
+
+    markup = InlineKeyboardMarkup([nav_buttons] if nav_buttons else [] + [sort_buttons]).to_dict()
+    await send_message(
+        chat_id,
+        get_translated_text(chat_id, "page_info").replace("{page}", str(page)).replace("{total}", str(total_pages)),
+        reply_markup=markup
+    )
