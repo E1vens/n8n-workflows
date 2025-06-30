@@ -4,7 +4,7 @@ from config import SUPABASE_URL, SUPABASE_KEY
 
 # 📦 Получение уникальных категорий
 def get_distinct_categories():
-    url = f"{SUPABASE_URL}/rest/v1/documents?select=metadata->>category"
+    url = f"{SUPABASE_URL}/rest/v1/documents?select=metadata"
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}"
@@ -13,7 +13,7 @@ def get_distinct_categories():
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        raw_categories = [item.get("metadata->>category") for item in response.json()]
+        raw_categories = [item["metadata"]["category"] for item in response.json() if "metadata" in item and item["metadata"].get("category")]
         categories = sorted(set(filter(None, raw_categories)))
         return categories
     except Exception as e:
