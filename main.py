@@ -112,13 +112,12 @@ async def telegram_webhook(req: Request):
             ]:
                 return await handle_info(chat_id, send_message)
 
-            if (
-                text.lower() in [
-                    "🌐 выбрать язык", "выбрать язык", "язык",
-                    "choose language", "elegir idioma",
-                    get_translated_text(chat_id, "btn_language").lower()
-                ]
-            ):
+            if text.strip() in [
+                get_translated_text(chat_id, "btn_language"),
+                "🌐 Выбрать язык", "Выбрать язык", "язык",
+                "🌐 Choose Language", "Choose Language",
+                "🌐 Elegir idioma", "Elegir idioma"
+            ]:
                 return await handle_language_selection(chat_id, send_message)
 
             return await send_message(
