@@ -63,14 +63,21 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
     products = all_products[start:end]
 
     for product in products:
+        photo = (
+            product.get("image_url")
+            or product.get("metadata", {}).get("image")
+            or product.get("metadata->>image")
+        )
+
         text = (
-            f"*{product.get('title', 'Без названия')}*\\n"
-            f"{get_translated_text(chat_id, 'price')}: {product.get('price', '?')}₽\\n"
+            f"*{product.get('title', 'Без названия')}*\n"
+            f"{get_translated_text(chat_id, 'price')}: {product.get('price', '?')}₽\n"
             f"{get_translated_text(chat_id, 'volume')}: {product.get('volume', '?')} • "
-            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}\\n"
+            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}\n"
             f"[🔗 {get_translated_text(chat_id, 'view_product')}]({product.get('product_url', '#')})"
         )
-        await send_message(chat_id, text, photo=product.get("image_url"))
+
+        await send_message(chat_id, text, photo=photo)
 
     nav_buttons = []
     if page > 1:
