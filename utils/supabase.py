@@ -4,7 +4,7 @@ from config import SUPABASE_URL, SUPABASE_KEY
 
 # 📦 Получение уникальных категорий
 def get_distinct_categories():
-    url = f"{SUPABASE_URL}/rest/v1/documents?select=category"
+    url = f"{SUPABASE_URL}/rest/v1/documents?select=metadata->>category"
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}"
@@ -13,45 +13,33 @@ def get_distinct_categories():
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        raw_categories = [item.get("category") for item in response.json()]
+        raw_categories = [item.get("metadata->>category") for item in response.json()]
         categories = sorted(set(filter(None, raw_categories)))
         return categories
     except Exception as e:
         print("❌ Ошибка получения категорий:", e)
         return []
 
-# 📦 Уникальные товары по категории (с фильтрацией по title)
+# 📦 Товары по категории
 def get_top_products_by_category(category: str, limit: int = 5):
     url = f"{SUPABASE_URL}/rest/v1/documents"
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Range": f"0-99",
+        "Range": f"0-{limit - 1}",
         "Range-Unit": "items"
     }
 
     params = {
-        "select": "title,price,volume,strength,metadata->>url,metadata->>photo",
-        "category": f"eq.{category}",
+        "select": "*",
+        "metadata->>category": f"eq.{category}",
         "order": "price.asc"
     }
 
     try:
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        all_items = response.json()
-
-        seen_titles = set()
-        unique_items = []
-        for item in all_items:
-            title = item.get("title")
-            if title and title not in seen_titles:
-                unique_items.append(item)
-                seen_titles.add(title)
-            if len(unique_items) >= limit:
-                break
-
-        return unique_items
+        return response.json()
     except Exception as e:
         print(f"❌ Ошибка получения товаров по категории '{category}':", e)
         return []
@@ -67,8 +55,8 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
     }
 
     params = {
-        "select": "id,title,price,volume,strength,metadata->>image,metadata",
-        "category": f"eq.{category}",
+        "select": "*",
+        "metadata->>category": f"eq.{category}",
         "order": f"price.{sort}"
     }
 
@@ -80,6 +68,7 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         print("❌ Supabase category error:", str(e))
         print("📦 Ответ Supabase:", response.text)
         return []
+
 
 # 🔍 Заглушка для поиска по эмбеддингам (до подключения n8n)
 async def match_documents(embedding: list) -> list:
