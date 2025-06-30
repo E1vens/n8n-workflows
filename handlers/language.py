@@ -1,9 +1,9 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from config import OPENAI_API_KEY
-import openai
+from openai import AsyncOpenAI
 
-# Установка API-ключа OpenAI
-openai.api_key = OPENAI_API_KEY
+# Инициализация OpenAI клиента
+client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 # Словарь для хранения языка пользователя
 user_languages: dict[int, str] = {}
@@ -31,7 +31,6 @@ def get_language_keyboard():
     ]
     return InlineKeyboardMarkup(keyboard).to_dict()
 
-# ✅ Синхронная функция для перевода кнопок (без GPT)
 def get_translated_text(chat_id: int, text_id: str) -> str:
     lang = get_user_language(chat_id)
     return (
@@ -49,7 +48,7 @@ async def auto_translate_if_needed(chat_id: int, text_ru: str) -> str:
     try:
         target_lang = {"en": "English", "es": "Spanish"}.get(lang, "English")
 
-        response = await openai.ChatCompletion.acreate(
+        response = await client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": f"Translate this text into {target_lang}. Preserve formatting and markdown."},
