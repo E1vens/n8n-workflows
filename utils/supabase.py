@@ -144,7 +144,7 @@ def get_loyalty_card(chat_id: int) -> Optional[dict]:
         return None
 
 # 🧠 Получить активный режим ИИ
-def get_ai_mode(chat_id: int) -> str | None:
+def get_ai_mode(chat_id: int) -> Optional[str]:
     url = f"{SUPABASE_URL}/rest/v1/user_settings?chat_id=eq.{chat_id}&select=ai_mode"
     headers = {
         "apikey": SUPABASE_KEY,
