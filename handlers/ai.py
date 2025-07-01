@@ -1,18 +1,3 @@
-### ✅ FILE: utils/gpt.py
-import os
-import openai
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-async def ask_gpt(messages: list[dict], model="gpt-3.5-turbo") -> str:
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages
-    )
-    return response.choices[0].message.content
-
-
-### ✅ FILE: handlers/ai.py
 from utils.supabase import get_ai_mode, set_ai_mode, clear_ai_mode, call_match_documents
 from utils.embeddings import get_embedding
 from utils.gpt import ask_gpt
