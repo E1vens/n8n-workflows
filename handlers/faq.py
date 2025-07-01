@@ -25,20 +25,18 @@ faq_keywords = {
 
 def find_faq_answer(message: str) -> str | None:
     text = message.lower()
+
+    # Высокий приоритет — сначала ищем тему "о компании"
+    for keyword in faq_keywords.get("о компании", []):
+        if keyword in text:
+            return faq_data["о компании"]
+
+    # Затем перебираем остальные категории
     for topic, keywords in faq_keywords.items():
+        if topic == "о компании":
+            continue
         for word in keywords:
             if word in text:
                 return faq_data.get(topic)
+
     return None
-
-
-async def translate_if_needed(text: str, target_lang: str) -> str:
-    if target_lang == "ru":
-        return text
-
-    from utils.gpt import ask_gpt
-    messages = [
-        {"role": "system", "content": f"Переведи на {target_lang}. Сохрани стиль, уважительность и структуру."},
-        {"role": "user", "content": text}
-    ]
-    return await ask_gpt(messages)
