@@ -14,7 +14,7 @@ async def run_diagnostics():
     print("\n🔧 Тест 2: Получение embedding и поиск документов")
     query = "что-нибудь сладкое до 1000"
     embedding = await get_embedding(query)
-    results = call_match_documents(embedding)
+    results = call_match_documents(embedding, top_k=20)
     if results:
         print(f"👉 Найдено товаров: {len(results)}")
         for r in results:
