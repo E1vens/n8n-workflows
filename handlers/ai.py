@@ -2,6 +2,9 @@ import re
 from utils.supabase import get_ai_mode, set_ai_mode, clear_ai_mode, call_match_documents
 from utils.embeddings import get_embedding
 from utils.gpt import ask_gpt
+from handlers.language import get_user_language
+from handlers.faq import find_faq_answer, translate_if_needed
+
 
 async def enable_ai_assistant(chat_id, send_message):
     reply_markup = {
@@ -32,8 +35,17 @@ async def handle_text_message_ai(chat_id: int, message: str):
         return await ask_gpt(messages)
 
     if mode == "faq":
+        lang = get_user_language(chat_id) or "ru"
+        answer_ru = find_faq_answer(message)
+
+        if answer_ru:
+            return await translate_if_needed(answer_ru, lang)
+
         messages = [
-            {"role": "system", "content": "Ты консультант компании по алкоголю. Отвечай строго по теме."},
+            {
+                "role": "system",
+                "content": "Ты консультант компании, рассказывай строго и уверенно, основываясь на предоставленной информации."
+            },
             {"role": "user", "content": message}
         ]
         return await ask_gpt(messages)
@@ -42,7 +54,7 @@ async def handle_text_message_ai(chat_id: int, message: str):
         embedding = await get_embedding(message)
 
         # Фильтры
-        price_match = re.search(r"до\s*(\d+)", message.lower())
+        price_match = re.search(r"до\\s*(\\d+)", message.lower())
         max_price = float(price_match.group(1)) if price_match else None
 
         # Категория (грубая проверка по словам)
@@ -77,9 +89,9 @@ async def handle_text_message_ai(chat_id: int, message: str):
         if not results:
             return "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку."
 
-        msg = "\n\n".join([
-            f"📦 *{r['title']}*\n"
-            f"Цена: {r['price']}₽ • Объём: {r['volume']} • Крепость: {r['strength']}\n"
+        msg = "\\n\\n".join([
+            f"📦 *{r['title']}*\\n"
+            f"Цена: {r['price']}₽ • Объём: {r['volume']} • Крепость: {r['strength']}\\n"
             f"[🔗 Ссылка на товар]({r['product_url']})"
             for r in results
         ])
