@@ -1,36 +1,3 @@
-### ✅ FILE: utils/embeddings.py
-import os
-import openai
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-async def get_embedding(text: str) -> list[float]:
-    response = openai.Embedding.create(
-        model="text-embedding-3-small",
-        input=text
-    )
-    return response['data'][0]['embedding']
-
-
-### ✅ FILE: utils/supabase.py
-... (оставлено как есть)
-
-
-### ✅ FILE: utils/gpt.py
-import os
-import openai
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-async def ask_gpt(messages: list[dict], model="gpt-3.5-turbo") -> str:
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages
-    )
-    return response.choices[0].message.content
-
-
-### ✅ FILE: diagnostics.py
 import asyncio
 from utils.supabase import set_ai_mode, get_ai_mode, clear_ai_mode, call_match_documents
 from utils.embeddings import get_embedding
