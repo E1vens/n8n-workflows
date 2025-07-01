@@ -85,11 +85,11 @@ async def enable_ai_assistant(chat_id, send_message):
     await send_message(chat_id, "Выберите режим работы ИИ:", reply_markup)
 
 async def handle_ai_mode_selection(chat_id, mode):
-    await set_ai_mode(chat_id, mode)
+    set_ai_mode(chat_id, mode)
     return f"ИИ-помощник активирован в режиме: {mode}"
 
 async def handle_text_message_ai(chat_id: int, message: str):
-    mode = await get_ai_mode(chat_id)
+    mode = get_ai_mode(chat_id)
     if not mode:
         return None
 
@@ -109,7 +109,7 @@ async def handle_text_message_ai(chat_id: int, message: str):
 
     if mode == "search":
         embedding = await get_embedding(message)
-        results = await call_match_documents(embedding)
+        results = call_match_documents(embedding)
         if not results:
             return "Ничего не найдено. Попробуйте изменить запрос."
 
