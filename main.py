@@ -91,12 +91,11 @@ async def telegram_webhook(req: Request):
             # --- Если активен ИИ-режим ---
             ai_mode = get_ai_mode(chat_id)
             if ai_mode:
-                messages = [
-                    {"role": "system", "content": "Ты ИИ-консультант по алкоголю. Отвечай строго по теме и вежливо."},
-                    {"role": "user", "content": text}
-                ]
-                reply = await ask_gpt(messages)
-                return await send_message(chat_id, reply, reply_markup=get_ai_stop_keyboard())
+                from handlers.ai import handle_text_message_ai
+                reply = await handle_text_message_ai(chat_id, text)
+                if reply:
+                    return await send_message(chat_id, reply, reply_markup=get_ai_stop_keyboard())
+
 
             # --- /start ---
             if text.lower() == "/start":
