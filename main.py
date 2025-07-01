@@ -196,7 +196,7 @@ async def telegram_webhook(req: Request):
                 reply_markup=get_main_menu(chat_id)
             )
 
-        return {"ok": True}
+        elif "callback_query" in data:
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "").strip()
@@ -230,7 +230,6 @@ async def telegram_webhook(req: Request):
                     print("❌ Ошибка разбора callback 'cat|...':", e)
                     return await send_message(chat_id, "⚠️ Не удалось загрузить товары.")
 
-            # --- AI режимы ---
             if data_value.startswith("ai:mode:"):
                 mode = data_value.split(":")[2]
                 set_ai_mode(chat_id, mode)
@@ -249,6 +248,7 @@ async def telegram_webhook(req: Request):
                 )
 
         return {"ok": True}
+
 
     except Exception as e:
         print("❌ ГЛОБАЛЬНАЯ ОШИБКА:", str(e))
