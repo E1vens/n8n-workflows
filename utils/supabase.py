@@ -1,5 +1,6 @@
 ### ✅ FILE: utils/supabase.py (полный и совместимый с ИИ)
 import requests
+from typing import List
 from datetime import datetime
 from config import SUPABASE_URL, SUPABASE_KEY
 
@@ -72,7 +73,7 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
 
 # 🔍 Векторный поиск товаров через RPC
 
-def call_match_documents(embedding: list[float], top_k: int = 5):
+def call_match_documents(embedding: List[float], top_k: int = 5):
     url = f"{SUPABASE_URL}/rest/v1/rpc/match_documents"
     headers = {
         "apikey": SUPABASE_KEY,
