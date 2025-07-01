@@ -92,7 +92,13 @@ def call_match_documents(
     if max_strength is not None:
         payload["max_strength"] = max_strength
 
-    response = requests.post(url, headers=HEADERS, json=payload)
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
     return response.json() if response.ok else []
 
 
