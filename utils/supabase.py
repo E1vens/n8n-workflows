@@ -1,7 +1,5 @@
-### ✅ FILE: utils/supabase.py (полный и совместимый с ИИ)
 import requests
-from typing import Optional
-from typing import List
+from typing import Optional, List
 from datetime import datetime
 from config import SUPABASE_URL, SUPABASE_KEY
 
@@ -16,7 +14,8 @@ def get_distinct_categories():
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        raw_categories = [item["metadata"]["category"] for item in response.json() if "metadata" in item and item["metadata"].get("category")]
+        raw_categories = [item["metadata"]["category"] for item in response.json()
+                          if "metadata" in item and item["metadata"].get("category")]
         categories = sorted(set(filter(None, raw_categories)))
         return categories
     except Exception as e:
@@ -47,7 +46,7 @@ def get_top_products_by_category(category: str, limit: int = 5):
         print(f"❌ Ошибка получения товаров по категории '{category}':", e)
         return []
 
-# 📦 Товары по категории (с постраничной навигацией)
+# 📦 Товары по категории (с пагинацией)
 def match_documents_by_category(category: str, sort: str = "asc", page: int = 1, per_page: int = 10) -> list:
     url = f"{SUPABASE_URL}/rest/v1/documents"
     headers = {
@@ -73,10 +72,7 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         return []
 
 # 🔍 Векторный поиск товаров через RPC
-
-from typing import List, Optional
-
-def call_match_documents(embedding: List[float], top_k: int = 5, filters: Optional[dict] = None):
+def call_match_documents(embedding: List[float], top_k: int = 5, filters: Optional[dict] = None) -> list:
     url = f"{SUPABASE_URL}/rest/v1/rpc/match_documents"
     headers = {
         "apikey": SUPABASE_KEY,
@@ -106,6 +102,7 @@ def register_loyalty_card(chat_id: int) -> bool:
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json"
     }
+
     check_url = f"{SUPABASE_URL}/rest/v1/loyalty_cards?select=id&Chat_ID=eq.{chat_id}"
     try:
         check_resp = requests.get(check_url, headers=headers)
@@ -155,6 +152,7 @@ def get_ai_mode(chat_id: int) -> Optional[str]:
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}"
     }
+
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -187,6 +185,7 @@ def clear_ai_mode(chat_id: int):
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}"
     }
+
     try:
         response = requests.delete(url, headers=headers)
         response.raise_for_status()
