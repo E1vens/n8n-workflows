@@ -98,8 +98,16 @@ def call_match_documents(
         "Content-Type": "application/json"
     }
 
-    response = requests.post(url, headers=headers, json=payload)
-    return response.json() if response.ok else []
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        data = response.json()
+        print("📥 Ответ от Supabase:", data)  # 👈 вот это нужно вставить
+        return data
+    except Exception as e:
+        print("❌ Ошибка Supabase match_documents:", e)
+        print("📦 Ответ:", response.text)
+        return []
 
 
 # 🧾 Проверка и регистрация карты лояльности
