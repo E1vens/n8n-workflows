@@ -14,30 +14,45 @@ async def get_embedding(text: str) -> list[float]:
 
 ### ✅ FILE: utils/supabase.py (добавить функции для работы с режимами и векторным поиском)
 import os
-from supabase import create_client
+import requests
 
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_APIKEY")
-supabase = create_client(url, key)
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_APIKEY")
 
-async def set_ai_mode(chat_id: int, mode: str):
-    supabase.table("user_settings").upsert({"chat_id": chat_id, "ai_mode": mode}).execute()
+HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json"
+}
 
-async def get_ai_mode(chat_id: int) -> str | None:
-    result = supabase.table("user_settings").select("ai_mode").eq("chat_id", chat_id).execute()
-    if result.data:
-        return result.data[0]["ai_mode"]
+
+def set_ai_mode(chat_id: int, mode: str):
+    payload = [{"chat_id": chat_id, "ai_mode": mode}]
+    url = f"{SUPABASE_URL}/rest/v1/user_settings"
+    requests.post(url, headers=HEADERS, json=payload)
+
+
+def get_ai_mode(chat_id: int) -> str | None:
+    url = f"{SUPABASE_URL}/rest/v1/user_settings?select=ai_mode&chat_id=eq.{chat_id}"
+    resp = requests.get(url, headers=HEADERS)
+    if resp.ok and resp.json():
+        return resp.json()[0]["ai_mode"]
     return None
 
-async def clear_ai_mode(chat_id: int):
-    supabase.table("user_settings").delete().eq("chat_id", chat_id).execute()
 
-async def call_match_documents(embedding: list[float], top_k: int = 5):
-    response = supabase.rpc("match_documents", {
+def clear_ai_mode(chat_id: int):
+    url = f"{SUPABASE_URL}/rest/v1/user_settings?chat_id=eq.{chat_id}"
+    requests.delete(url, headers=HEADERS)
+
+
+def call_match_documents(embedding: list[float], top_k: int = 5):
+    url = f"{SUPABASE_URL}/rest/v1/rpc/match_documents"
+    payload = {
         "query_embedding": embedding,
         "match_count": top_k
-    }).execute()
-    return response.data
+    }
+    resp = requests.post(url, headers=HEADERS, json=payload)
+    return resp.json() if resp.ok else []
 
 
 ### ✅ FILE: utils/gpt.py
