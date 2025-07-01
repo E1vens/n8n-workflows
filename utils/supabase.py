@@ -72,28 +72,29 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         return []
 
 # 🔍 Векторный поиск товаров через RPC
-def call_match_documents(embedding: List[float], top_k: int = 5, filters: Optional[dict] = None) -> list:
+def call_match_documents(
+    embedding: list[float],
+    top_k: int = 5,
+    max_price: float | None = None,
+    min_strength: float | None = None,
+    max_strength: float | None = None
+) -> list[dict]:
     url = f"{SUPABASE_URL}/rest/v1/rpc/match_documents"
-    headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json"
-    }
     payload = {
         "query_embedding": embedding,
         "match_count": top_k
     }
 
-    if filters:
-        payload["filter"] = filters
+    if max_price is not None:
+        payload["max_price"] = max_price
+    if min_strength is not None:
+        payload["min_strength"] = min_strength
+    if max_strength is not None:
+        payload["max_strength"] = max_strength
 
-    try:
-        response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        print("❌ Ошибка вызова match_documents:", e)
-        return []
+    response = requests.post(url, headers=HEADERS, json=payload)
+    return response.json() if response.ok else []
+
 
 # 🧾 Проверка и регистрация карты лояльности
 def register_loyalty_card(chat_id: int) -> bool:
