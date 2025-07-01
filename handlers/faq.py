@@ -43,4 +43,22 @@ def find_faq_answer(message: str) -> str | None:
             if word in text:
                 return faq_data.get(topic)
 
-    return None
+    return None  # <-- ДОЛЖНО быть ЗДЕСЬ (внутри find_faq_answer)
+
+
+async def translate_if_needed(text: str, target_lang: str) -> str:
+    if target_lang == "ru":
+        return text
+
+    from utils.gpt import ask_gpt
+    messages = [
+        {
+            "role": "system",
+            "content": f"Переведи следующий текст на {target_lang}. Сохрани стиль, вежливость и структуру."
+        },
+        {
+            "role": "user",
+            "content": text
+        }
+    ]
+    return await ask_gpt(messages)
