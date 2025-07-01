@@ -13,9 +13,11 @@ async def enable_ai_assistant(chat_id, send_message):
     }
     await send_message(chat_id, "Выберите режим работы ИИ:", reply_markup)
 
+
 async def handle_ai_mode_selection(chat_id, mode):
     set_ai_mode(chat_id, mode)
     return f"ИИ-помощник активирован в режиме: {mode}"
+
 
 async def handle_text_message_ai(chat_id: int, message: str):
     mode = get_ai_mode(chat_id)
@@ -39,25 +41,41 @@ async def handle_text_message_ai(chat_id: int, message: str):
     if mode == "search":
         embedding = await get_embedding(message)
 
-        # --- Извлекаем фильтры из текста ---
+        # Фильтры
         price_match = re.search(r"до\s*(\d+)", message.lower())
         max_price = float(price_match.group(1)) if price_match else None
 
-        strength_min_match = re.search(r"от\s*(\d+\.?\d*)\s*%", message.lower())
-        strength_max_match = re.search(r"до\s*(\d+\.?\d*)\s*%", message.lower())
-        min_strength = float(strength_min_match.group(1)) if strength_min_match else None
-        max_strength = float(strength_max_match.group(1)) if strength_max_match else None
+        # Категория (грубая проверка по словам)
+        categories = {
+            "вино": "вино",
+            "водка": "водка",
+            "шампанское": "шампанское",
+            "ром": "ром",
+            "коньяк": "коньяк",
+            "виски": "виски",
+            "текила": "текила",
+        }
+
+        detected_category = None
+        for key in categories:
+            if key in message.lower():
+                detected_category = categories[key]
+                break
+
+        # Кол-во результатов
+        top_k = 10
 
         results = call_match_documents(
-            embedding,
-            top_k=5,
-            max_price=max_price,
-            min_strength=min_strength,
-            max_strength=max_strength
+            embedding=embedding,
+            top_k=top_k,
+            max_price=max_price
         )
 
+        if detected_category:
+            results = [r for r in results if detected_category.lower() in r["title"].lower()]
+
         if not results:
-            return "❌ Ничего не найдено. Попробуйте изменить запрос."
+            return "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку."
 
         msg = "\n\n".join([
             f"📦 *{r['title']}*\n"
