@@ -74,7 +74,9 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
 
 # 🔍 Векторный поиск товаров через RPC
 
-def call_match_documents(embedding: List[float], top_k: int = 5):
+from typing import List, Optional
+
+def call_match_documents(embedding: List[float], top_k: int = 5, filters: Optional[dict] = None):
     url = f"{SUPABASE_URL}/rest/v1/rpc/match_documents"
     headers = {
         "apikey": SUPABASE_KEY,
@@ -85,6 +87,9 @@ def call_match_documents(embedding: List[float], top_k: int = 5):
         "query_embedding": embedding,
         "match_count": top_k
     }
+
+    if filters:
+        payload["filter"] = filters
 
     try:
         response = requests.post(url, headers=headers, json=payload)
