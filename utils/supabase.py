@@ -1,3 +1,4 @@
+### ✅ FILE: utils/supabase.py (полный и совместимый с ИИ)
 import requests
 from datetime import datetime
 from config import SUPABASE_URL, SUPABASE_KEY
@@ -69,11 +70,27 @@ def match_documents_by_category(category: str, sort: str = "asc", page: int = 1,
         print("📦 Ответ Supabase:", response.text)
         return []
 
+# 🔍 Векторный поиск товаров через RPC
 
-# 🔍 Заглушка для поиска по эмбеддингам (до подключения n8n)
-async def match_documents(embedding: list) -> list:
-    print("⚠️ Заглушка match_documents вызвана")
-    return []
+def call_match_documents(embedding: list[float], top_k: int = 5):
+    url = f"{SUPABASE_URL}/rest/v1/rpc/match_documents"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "query_embedding": embedding,
+        "match_count": top_k
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print("❌ Ошибка вызова match_documents:", e)
+        return []
 
 # 🧾 Проверка и регистрация карты лояльности
 def register_loyalty_card(chat_id: int) -> bool:
@@ -82,7 +99,6 @@ def register_loyalty_card(chat_id: int) -> bool:
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json"
     }
-
     check_url = f"{SUPABASE_URL}/rest/v1/loyalty_cards?select=id&Chat_ID=eq.{chat_id}"
     try:
         check_resp = requests.get(check_url, headers=headers)
@@ -92,7 +108,6 @@ def register_loyalty_card(chat_id: int) -> bool:
         print("❌ Ошибка при проверке карты:", e)
         return False
 
-    # Регистрация новой карты
     insert_url = f"{SUPABASE_URL}/rest/v1/loyalty_cards"
     payload = [{
         "Chat_ID": str(chat_id),
@@ -101,7 +116,6 @@ def register_loyalty_card(chat_id: int) -> bool:
         "birthday": None,
         "created_at": datetime.utcnow().isoformat()
     }]
-
     try:
         insert_resp = requests.post(insert_url, headers=headers, json=payload)
         insert_resp.raise_for_status()
@@ -126,3 +140,48 @@ def get_loyalty_card(chat_id: int) -> dict | None:
     except Exception as e:
         print("❌ Ошибка получения карты:", e)
         return None
+
+# 🧠 Получить активный режим ИИ
+def get_ai_mode(chat_id: int) -> str | None:
+    url = f"{SUPABASE_URL}/rest/v1/user_settings?chat_id=eq.{chat_id}&select=ai_mode"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}"
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data[0]["ai_mode"] if data else None
+    except Exception as e:
+        print("❌ Ошибка получения режима ИИ:", e)
+        return None
+
+# 🧠 Установить/обновить режим ИИ
+def set_ai_mode(chat_id: int, mode: str):
+    url = f"{SUPABASE_URL}/rest/v1/user_settings"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates"
+    }
+    payload = [{"chat_id": chat_id, "ai_mode": mode}]
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+    except Exception as e:
+        print("❌ Ошибка установки режима ИИ:", e)
+
+# 🧠 Очистить режим ИИ
+def clear_ai_mode(chat_id: int):
+    url = f"{SUPABASE_URL}/rest/v1/user_settings?chat_id=eq.{chat_id}"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}"
+    }
+    try:
+        response = requests.delete(url, headers=headers)
+        response.raise_for_status()
+    except Exception as e:
+        print("❌ Ошибка удаления режима ИИ:", e)
