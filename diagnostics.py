@@ -15,12 +15,9 @@ async def run_diagnostics():
     query = "что-нибудь сладкое до 1000"
     embedding = await get_embedding(query)
     results = call_match_documents(embedding, top_k=20)
-    if results:
-        print(f"👉 Найдено товаров: {len(results)}")
-        for r in results:
-            print(f"- {r['title']} • {r['price']}₽")
-    else:
-        print("❌ Товары не найдены")
+
+    print("\n⚠️ Сырой результат Supabase:")
+    print(results)
 
     print("\n🔧 Тест 3: GPT-ответ в режиме FAQ")
     messages = [
