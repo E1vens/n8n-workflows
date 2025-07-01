@@ -1,5 +1,6 @@
 ### ✅ FILE: utils/supabase.py (полный и совместимый с ИИ)
 import requests
+from typing import Optional
 from typing import List
 from datetime import datetime
 from config import SUPABASE_URL, SUPABASE_KEY
@@ -126,7 +127,7 @@ def register_loyalty_card(chat_id: int) -> bool:
         return False
 
 # 📤 Получение информации о карте лояльности
-def get_loyalty_card(chat_id: int) -> dict | None:
+def get_loyalty_card(chat_id: int) -> Optional[dict]:
     url = f"{SUPABASE_URL}/rest/v1/loyalty_cards?Chat_ID=eq.{chat_id}&select=*"
     headers = {
         "apikey": SUPABASE_KEY,
