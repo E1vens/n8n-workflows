@@ -1,7 +1,7 @@
 import re
 from utils.supabase import get_ai_mode, set_ai_mode, clear_ai_mode, call_match_documents
 from utils.embeddings import get_embedding
-from utils.gpt import ask_gpt, detect_ai_mode
+from utils.gpt import ask_gpt, detect_ai_mode_gpt  # ⬅️ GPT-анализ
 from handlers.language import get_user_language
 from handlers.faq import find_faq_answer, translate_if_needed
 
@@ -22,14 +22,12 @@ async def handle_ai_mode_selection(chat_id, mode):
     return f"ИИ-помощник активирован в режиме: {mode}"
 
 
-    from utils.gpt import detect_ai_mode_gpt
-
+async def handle_text_message_ai(chat_id: int, message: str):
     mode = await detect_ai_mode_gpt(message)
     print(f"🤖 GPT определил режим: {mode}")
     set_ai_mode(chat_id, mode)
     if not mode:
         return None
-
 
     if mode == "chat":
         messages = [
@@ -57,11 +55,9 @@ async def handle_ai_mode_selection(chat_id, mode):
     if mode == "search":
         embedding = await get_embedding(message)
 
-        # Фильтры
-        price_match = re.search(r"до\\s*(\\d+)", message.lower())
+        price_match = re.search(r"до\s*(\d+)", message.lower())
         max_price = float(price_match.group(1)) if price_match else None
 
-        # Категория (грубая проверка по словам)
         categories = {
             "вино": "вино",
             "водка": "водка",
@@ -78,7 +74,6 @@ async def handle_ai_mode_selection(chat_id, mode):
                 detected_category = categories[key]
                 break
 
-        # Кол-во результатов
         top_k = 10
 
         results = call_match_documents(
@@ -93,9 +88,9 @@ async def handle_ai_mode_selection(chat_id, mode):
         if not results:
             return "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку."
 
-        msg = "\\n\\n".join([
-            f"📦 *{r['title']}*\\n"
-            f"Цена: {r['price']}₽ • Объём: {r['volume']} • Крепость: {r['strength']}\\n"
+        msg = "\n\n".join([
+            f"📦 *{r['title']}*\n"
+            f"Цена: {r['price']}₽ • Объём: {r['volume']} • Крепость: {r['strength']}\n"
             f"[🔗 Ссылка на товар]({r['product_url']})"
             for r in results
         ])
