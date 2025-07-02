@@ -30,11 +30,11 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
             payload["reply_markup"] = reply_markup
         method = "sendMessage"
 
-    print("\ud83d\udce4 Payload:", json.dumps(payload, indent=2, ensure_ascii=False))
+    logging.info("Payload: %s", json.dumps(payload, indent=2, ensure_ascii=False))
 
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{TELEGRAM_API_URL}/{method}", json=payload)
-        print("\ud83d\udce5 Ответ Telegram:", response.status_code, response.content.decode())
+        logging.info("Ответ Telegram: %s %s", response.status_code, response.content.decode())
 
 @app.post("/webhook")
 async def telegram_webhook(req: Request):
