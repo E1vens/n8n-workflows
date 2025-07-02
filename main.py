@@ -93,6 +93,12 @@ async def telegram_webhook(req: Request):
                 clear_ai_mode(chat_id)
                 return await send_message(chat_id, "🛑 ИИ-режим завершён.", reply_markup=get_main_menu(chat_id))
 
+            # --- Проверка: если ИИ активен, блокируем доступ к остальным функциям ---
+            if get_ai_mode(chat_id):
+                return await send_message(
+                    chat_id,
+                    "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
+                )
 
             # --- Обработка ИИ — автоопределение режима ---
             from handlers.ai import set_ai_mode, get_ai_mode, clear_ai_mode, ask_gpt, handle_text_message_ai
