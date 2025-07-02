@@ -50,7 +50,12 @@ async def handle_text_message_ai(chat_id: int, message: str):
 
     
     if not mode:
-        return None
+        messages = [
+            {"role": "system", "content": "Ты умный помощник. Отвечай дружелюбно и понятно."},
+            {"role": "user", "content": message}
+        ]
+        return await ask_gpt(messages)
+
 
     if mode == "chat":
         messages = [
