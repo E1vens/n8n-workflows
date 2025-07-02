@@ -24,19 +24,17 @@ async def enable_ai_assistant(chat_id, send_message):
     await send_message(chat_id, "Выберите режим работы ИИ:", reply_markup)
 
 
-async def handle_ai_mode_selection(chat_id, mode):
-    set_ai_mode(chat_id, mode)
-    return f"ИИ-помощник активирован в режиме: {mode}"
-
-
 async def handle_text_message_ai(chat_id: int, message: str):
-    mode = await detect_ai_mode_gpt(message)
-    print(f"🤖 GPT определил режим: {mode}")
+    mode = get_ai_mode(chat_id)
+    if not mode:
+        mode = await detect_ai_mode_gpt(message)
+        print(f"🤖 GPT определил режим: {mode}")
 
-    if mode == "company":
-        mode = "faq"
+        if mode == "company":
+            mode = "faq"
 
-    set_ai_mode(chat_id, mode)
+        set_ai_mode(chat_id, mode)
+
 
     if not mode:
         return None
