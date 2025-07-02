@@ -225,6 +225,7 @@ async def telegram_webhook(req: Request):
             # --- 1. Подтверждение возраста — всегда разрешено
             if data_value.startswith("age:"):
                 result = handle_age_confirmation(chat_id, data_value)
+                clear_ai_mode(chat_id)
                 return await send_message(
                     chat_id,
                     text=result["text"],
