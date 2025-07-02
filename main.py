@@ -95,6 +95,11 @@ async def telegram_webhook(req: Request):
 
             # --- Если ИИ активен — пробуем обработать GPT ---
             ai_mode = get_ai_mode(chat_id)
+
+            # ❌ Не обрабатываем ИИ, если это команда активации
+            if text.lower() in ["🤖 ии консультант", "ии консультант", "ai assistant", "asistente ia"]:
+                return await send_message(chat_id, "Напишите свой вопрос, и ИИ сам поймёт, чем помочь 🤖")
+
             if ai_mode:
                 reply = await handle_text_message_ai(chat_id, text)
                 if reply:
