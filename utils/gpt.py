@@ -4,7 +4,15 @@ from typing import List, Dict
 
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 🔮 Запрос к GPT
+# 💬 Ответ от GPT в режиме чата
+async def ask_gpt(messages: List[Dict], model: str = "gpt-3.5-turbo") -> str:
+    response = await client.chat.completions.create(
+        model=model,
+        messages=messages
+    )
+    return response.choices[0].message.content.strip()
+
+# 🔮 Определение режима через GPT
 async def detect_ai_mode_gpt(message: str) -> str:
     messages = [
         {
