@@ -93,18 +93,21 @@ async def telegram_webhook(req: Request):
                 clear_ai_mode(chat_id)
                 return await send_message(chat_id, "🛑 ИИ-режим завершён.", reply_markup=get_main_menu(chat_id))
 
-            # --- Проверка: если ИИ активен, блокируем доступ к остальным функциям ---
+            
+            # --- Если ИИ активен — обрабатываем текст сообщением GPT ---
+            if get_ai_mode(chat_id):
+                reply = await handle_text_message_ai(chat_id, text)
+                if reply:
+                    return await send_message(chat_id, reply)
+
+
+            # --- Проверка: если ИИ активен, запрещаем команды и кнопки ---
             if get_ai_mode(chat_id):
                 return await send_message(
                     chat_id,
                     "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
                 )
-
-            # --- Обработка ИИ — автоопределение режима ---
-            reply = await handle_text_message_ai(chat_id, text)
-            if reply:
-                return await send_message(chat_id, reply)
-
+            
 
             # --- /start ---
             if text.lower() == "/start":
@@ -117,6 +120,7 @@ async def telegram_webhook(req: Request):
                     get_translated_text(chat_id, "menu_prompt"),
                     reply_markup=get_main_menu(chat_id)
                 )
+
 
             # --- Каталог ---
             if text.lower() in ["каталог", "🛍 каталог", "catalog", "🛍 catalog", "catálogo", "🛍 catálogo"]:
