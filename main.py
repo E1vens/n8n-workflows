@@ -39,30 +39,20 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         logging.info("Ответ Telegram: %s %s", response.status_code, response.content.decode())
 
 @app.post("/webhook")
-async def telegram_webhook(req: Request):
-    logging.info("📥 Получен запрос от Telegram")
+async def telegram_webhook(request):
+    data = await request.json()
+
     try:
-        data = await req.json()
-        logging.info("📦 Данные от Telegram: %s", json.dumps(data, indent=2, ensure_ascii=False))
-
         if "message" in data:
-            message = data["message"]
-            chat_id = message["chat"]["id"]
-            text = message.get("text", "").strip()
-
-            if not text:
-                return {"ok": True}
-
-            if not is_confirmed(chat_id):
-                if text.startswith("age:"):
-                    result = handle_age_confirmation(chat_id, text)
-                    return await send_message(chat_id, result["text"], reply_markup=result.get("reply_markup"))
-                return await send_message(chat_id, **request_age_confirmation(chat_id))
-
+            chat_id = data["message"]["chat"]["id"]
+            text = data["message"].get("text", "")
             return await handle_text_message(chat_id, text, send_message)
 
         elif "callback_query" in data:
-            return await handle_callback_query(data["callback_query"], send_message, get_main_menu, get_ai_stop_keyboard)
+            callback = data["callback_query"]
+            chat_id = callback["from"]["id"]
+            data_value = callback.get("data", "")
+            return await handle_callback_query(chat_id, data_value, send_message, get_ai_stop_keyboard)
 
         return {"ok": True}
 
