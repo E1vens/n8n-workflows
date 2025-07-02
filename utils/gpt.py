@@ -29,17 +29,3 @@ async def detect_ai_mode_gpt(message: str) -> str:
         messages=messages
     )
     return response.choices[0].message.content.strip()
-
-
-# 🔍 Определение режима ИИ
-def detect_ai_mode(message: str) -> str:
-    text = message.lower()
-
-    if any(word in text for word in SEARCH_KEYWORDS):
-        return "search"
-    elif any(word in text for word in COMPANY_KEYWORDS):
-        return "company"
-    elif any(word in text for word in CHAT_KEYWORDS):
-        return "chat"
-    else:
-        return "chat"
