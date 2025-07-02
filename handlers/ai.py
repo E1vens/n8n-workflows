@@ -1,7 +1,7 @@
 import re
 from utils.supabase import get_ai_mode, set_ai_mode, clear_ai_mode, call_match_documents
 from utils.embeddings import get_embedding
-from utils.gpt import ask_gpt
+from utils.gpt import ask_gpt, detect_ai_mode
 from handlers.language import get_user_language
 from handlers.faq import find_faq_answer, translate_if_needed
 
