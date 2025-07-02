@@ -5,6 +5,7 @@ from handlers.callbacks import handle_callback_query
 from handlers.age import is_confirmed, handle_age_confirmation, request_age_confirmation
 from handlers.ai import get_ai_stop_keyboard
 from fastapi.concurrency import run_in_threadpool
+from handlers.buttons import get_main_menu
 import httpx
 import json
 import traceback
@@ -61,7 +62,7 @@ async def telegram_webhook(req: Request):
             return await handle_text_message(chat_id, text, send_message)
 
         elif "callback_query" in data:
-            return await handle_callback_query(data["callback_query"], send_message, get_ai_stop_keyboard)
+            return await handle_callback_query(data["callback_query"], send_message, get_main_menu, get_ai_stop_keyboard)
 
         return {"ok": True}
 
