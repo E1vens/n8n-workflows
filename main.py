@@ -60,7 +60,7 @@ async def telegram_webhook(req: Request):
             return await handle_text_message(chat_id, text, send_message)
 
         elif "callback_query" in data:
-            return await handle_callback_query(data["callback_query"], send_message)
+            return await handle_callback_query(data["callback_query"], send_message, get_ai_stop_keyboard)
 
         return {"ok": True}
 
