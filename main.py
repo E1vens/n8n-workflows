@@ -97,17 +97,15 @@ async def telegram_webhook(req: Request):
             ai_mode = get_ai_mode(chat_id)
 
 
-            if ai_mode:
-                reply = await handle_text_message_ai(chat_id, text)
-                if reply:
-                    return await send_message(chat_id, reply)
+            reply = await handle_text_message_ai(chat_id, text)
+            if reply:
+                return await send_message(chat_id, reply)
 
-                # 🛑 Даже если GPT не ответил — блокируем переход к другим функциям
-                return await send_message(
-                    chat_id,
-                    "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
-                )
-         
+            return await send_message(
+                chat_id,
+                "🤖 Я пока не понял, как вам помочь. Попробуйте переформулировать вопрос или выберите режим заново."
+            )
+
 
             # --- /start ---
             if text.lower() == "/start":
