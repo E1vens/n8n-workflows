@@ -212,7 +212,12 @@ async def telegram_webhook(req: Request):
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "").strip()
-            print(f"🔢 Callback получен: {data_value}")
+            # ✅ Блокируем любые кнопки, если активен ИИ (кроме кнопок ai:...)
+            if get_ai_mode(chat_id) and not data_value.startswith("ai:"):
+                return await send_message(
+                    chat_id,
+                    "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
+                )
 
             if data_value.startswith("age:"):
                 result = handle_age_confirmation(chat_id, data_value)
