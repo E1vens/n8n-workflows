@@ -208,13 +208,9 @@ async def telegram_webhook(req: Request):
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "").strip()
-            # ✅ Блокируем любые кнопки, если активен ИИ (кроме кнопок ai:...)
-            if get_ai_mode(chat_id) and not data_value.startswith("ai:"):
-                return await send_message(
-                    chat_id,
-                    "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
-                )
+            print(f"🔢 Callback получен: {data_value}")
 
+            # ✅ 1. Обработка подтверждения возраста — всегда разрешена
             if data_value.startswith("age:"):
                 result = handle_age_confirmation(chat_id, data_value)
                 return await send_message(
@@ -223,6 +219,14 @@ async def telegram_webhook(req: Request):
                     reply_markup=result.get("reply_markup")
                 )
 
+            # ❌ 2. Блокируем все остальные действия, если ИИ активен (кроме ai:)
+            if get_ai_mode(chat_id) and not data_value.startswith("ai:"):
+                return await send_message(
+                    chat_id,
+                    "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
+                )
+
+            # ✅ 3. Остальные callback'и
             if data_value.startswith("lang:"):
                 lang_code = data_value.split(":")[1]
                 set_user_language(chat_id, lang_code)
