@@ -7,8 +7,15 @@ from fastapi.concurrency import run_in_threadpool
 import httpx
 import json
 import traceback
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
 app = FastAPI()
+
 
 # --- Отправка сообщений в Telegram ---
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None, photo: str | None = None):
