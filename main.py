@@ -98,7 +98,7 @@ async def telegram_webhook(req: Request):
             from handlers.ai import set_ai_mode, get_ai_mode, clear_ai_mode, ask_gpt, handle_text_message_ai
             reply = await handle_text_message_ai(chat_id, text)
             if reply:
-                return await send_message(chat_id, reply, reply_markup=get_ai_stop_keyboard())
+                return await send_message(chat_id, reply)
 
 
             # --- /start ---
