@@ -1,7 +1,7 @@
 import re
 from utils.supabase import get_ai_mode, set_ai_mode, clear_ai_mode, call_match_documents
 from utils.embeddings import get_embedding
-from utils.gpt import ask_gpt, detect_ai_mode_gpt  # ⬅️ GPT-анализ
+from utils.gpt import ask_gpt, detect_ai_mode_gpt  # ⮆️ GPT-анализ
 from handlers.language import get_user_language
 from handlers.faq import find_faq_answer, translate_if_needed
 
@@ -109,7 +109,7 @@ async def handle_text_message_ai(chat_id: int, message: str):
             return "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку."
 
         msg = "\n\n".join([
-            f"📦 *{r['title']}*\nЦена: {r['price']}₽ • Объём: {r['volume']} • Крепость: {r['strength']}\n[🔗 Ссылка на товар]({r['product_url']})"
+            f"📦 *{r['title']}*\nЦена: {r['price']}\u20bd • Объём: {r['volume']} • Крепость: {r['strength']}\n[🔗 Ссылка на товар]({r['product_url']})"
             for r in results
         ])
         return msg
