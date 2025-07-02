@@ -93,10 +93,6 @@ async def telegram_webhook(req: Request):
                 clear_ai_mode(chat_id)
                 return await send_message(chat_id, "🛑 ИИ-режим завершён.", reply_markup=get_main_menu(chat_id))
 
-            # --- Команда "ИИ консультант" ---
-            if text.lower() in ["🤖 ии консультант", "ии консультант", "ai assistant", "asistente ia"]:
-                return await send_message(chat_id, "Напишите свой вопрос, и ИИ сам поймёт, чем помочь 🤖")
-
             # --- Если ИИ активен — пробуем обработать GPT ---
             ai_mode = get_ai_mode(chat_id)
 
@@ -110,6 +106,11 @@ async def telegram_webhook(req: Request):
                     "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
                 )
 
+            # --- Команда "ИИ консультант" ---
+            if text.lower() in ["🤖 ии консультант", "ии консультант", "ai assistant", "asistente ia"]:
+                return await send_message(chat_id, "Напишите свой вопрос, и ИИ сам поймёт, чем помочь 🤖")
+
+            # --- По умолчанию ---
             return await send_message(
                 chat_id,
                 text=get_translated_text(chat_id, "menu_prompt"),
