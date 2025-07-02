@@ -23,7 +23,8 @@ async def handle_ai_mode_selection(chat_id, mode):
 
 
 async def handle_text_message_ai(chat_id: int, message: str):
-    mode = get_ai_mode(chat_id)
+    mode = detect_ai_mode(message)
+    set_ai_mode(chat_id, mode)
     if not mode:
         return None
 
