@@ -22,11 +22,14 @@ async def handle_ai_mode_selection(chat_id, mode):
     return f"ИИ-помощник активирован в режиме: {mode}"
 
 
-async def handle_text_message_ai(chat_id: int, message: str):
-    mode = detect_ai_mode(message)
+    from utils.gpt import detect_ai_mode_gpt
+
+    mode = await detect_ai_mode_gpt(message)
+    print(f"🤖 GPT определил режим: {mode}")
     set_ai_mode(chat_id, mode)
     if not mode:
         return None
+
 
     if mode == "chat":
         messages = [
