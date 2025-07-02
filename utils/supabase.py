@@ -193,16 +193,21 @@ def set_ai_mode(chat_id: int, mode: str):
     except Exception as e:
         print("❌ Ошибка установки режима ИИ:", e)
 
-# 🧠 Очистить режим ИИ
+# 🧠 Очистить режим ИИ (обнуление, не удаление строки)
 def clear_ai_mode(chat_id: int):
     url = f"{SUPABASE_URL}/rest/v1/user_settings?chat_id=eq.{chat_id}"
     headers = {
         "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}"
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "ai_mode": None
     }
 
     try:
-        response = requests.delete(url, headers=headers)
+        response = requests.patch(url, headers=headers, json=payload)
         response.raise_for_status()
     except Exception as e:
-        print("❌ Ошибка удаления режима ИИ:", e)
+        print("❌ Ошибка сброса режима ИИ:", e)
