@@ -207,10 +207,18 @@ async def telegram_webhook(req: Request):
                     return await send_message(chat_id, "⚠️ Не удалось получить данные карты.")
 
             # --- По умолчанию ---
-            return await send_message(chat_id,
+            if get_ai_mode(chat_id):
+                return await send_message(
+                    chat_id,
+                    "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
+                )
+
+            return await send_message(
+                chat_id,
                 text=get_translated_text(chat_id, "menu_prompt"),
                 reply_markup=get_main_menu(chat_id)
             )
+
 
         elif "callback_query" in data:
             callback = data["callback_query"]
@@ -218,31 +226,26 @@ async def telegram_webhook(req: Request):
             data_value = callback.get("data", "").strip()
             print(f"🔢 Callback получен: {data_value}")
 
-            # ✅ 1. Обработка подтверждения возраста — всегда разрешена
-            if data_value.startswith("age:"):
-                result = handle_age_confirmation(chat_id, data_value)
-                return await send_message(
-                    chat_id,
-                    text=result["text"],
-                    reply_markup=result.get("reply_markup")
-                )
-
-            # ❌ 2. Блокируем все остальные действия, если ИИ активен (кроме ai:)
-            if get_ai_mode(chat_id) and not data_value.startswith("ai:"):
+            # --- По умолчанию ---
+            # 1. Если ИИ-режим активен, блокируем все, кроме /stop
+            if get_ai_mode(chat_id):
                 return await send_message(
                     chat_id,
                     "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
                 )
 
-            # ✅ 3. Остальные callback'и
-            if data_value.startswith("lang:"):
-                lang_code = data_value.split(":")[1]
-                set_user_language(chat_id, lang_code)
-                return await send_message(
-                    chat_id,
-                    text=get_translated_text(chat_id, "language_set"),
-                    reply_markup=get_main_menu(chat_id)
-                )
+            # 2. Пробуем обработать сообщение через ИИ (определит search/chat/faq)
+            reply = await handle_text_message_ai(chat_id, text)
+            if reply:
+                return await send_message(chat_id, reply)
+
+            # 3. Если ни одна логика не подошла — главное меню
+            return await send_message(
+                chat_id,
+                text=get_translated_text(chat_id, "menu_prompt"),
+                reply_markup=get_main_menu(chat_id)
+            )
+
 
             if data_value.startswith("cat|"):
                 try:
