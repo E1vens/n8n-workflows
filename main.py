@@ -222,20 +222,20 @@ async def telegram_webhook(req: Request):
             data_value = callback.get("data", "").strip()
             print(f"🔢 Callback получен: {data_value}")
 
-            # --- 1. Если ИИ-режим активен, блокируем все, кроме ai: (иначе невозможно будет выйти из ИИ)
-            if get_ai_mode(chat_id) and not data_value.startswith("ai:"):
-                return await send_message(
-                    chat_id,
-                    "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
-                )
-
-            # --- 2. Подтверждение возраста — всегда разрешено
+            # --- 1. Подтверждение возраста — всегда разрешено
             if data_value.startswith("age:"):
                 result = handle_age_confirmation(chat_id, data_value)
                 return await send_message(
                     chat_id,
                     text=result["text"],
                     reply_markup=result.get("reply_markup")
+                )
+
+            # --- 2. Если ИИ-режим активен, блокируем все, кроме ai: (иначе невозможно будет выйти из ИИ)
+            if get_ai_mode(chat_id) and not data_value.startswith("ai:"):
+                return await send_message(
+                    chat_id,
+                    "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`."
                 )
 
             # --- 3. Смена языка
@@ -247,6 +247,7 @@ async def telegram_webhook(req: Request):
                     text=get_translated_text(chat_id, "language_set"),
                     reply_markup=get_main_menu(chat_id)
                 )
+
 
             # --- 4. Выбор категории
             if data_value.startswith("cat|"):
