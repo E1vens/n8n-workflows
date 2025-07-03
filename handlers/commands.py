@@ -5,7 +5,13 @@ from handlers.info import handle_info
 from handlers.elite import handle_elite
 from handlers.language import handle_language_selection, get_translated_text
 from handlers.loyalty import register_loyalty_card
-from handlers.ai import set_ai_mode, get_ai_mode, clear_ai_mode, handle_text_message_ai
+from handlers.ai import (
+    set_ai_mode,
+    get_ai_mode,
+    clear_ai_mode,
+    handle_text_message_ai,
+    get_ai_stop_keyboard,
+)
 from fastapi.concurrency import run_in_threadpool
 
 
@@ -43,7 +49,12 @@ async def handle_text_message(chat_id: int, text: str, send_message):
 
     # --- ИИ консультант ---
     if text.lower() in ["🤖 ии консультант", "ии консультант", "ai assistant", "asistente ia"]:
-        return await send_message(chat_id, "Напишите свой вопрос, и ИИ сам поймёт, чем помочь 🤖")
+        set_ai_mode(chat_id, "detect")
+        return await send_message(
+            chat_id,
+            "Напишите свой вопрос, и ИИ сам поймёт, чем помочь 🤖",
+            reply_markup=get_ai_stop_keyboard(),
+        )
 
     # --- /start ---
     if text.lower() == "/start":

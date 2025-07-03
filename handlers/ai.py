@@ -39,7 +39,7 @@ async def handle_text_message_ai(chat_id: int, message: str):
     if message.strip().lower() in IGNORED_FOR_AI:
         return None
 
-    if not mode:
+    if not mode or mode == "detect":
         mode = await detect_ai_mode_gpt(message)
         print(f"🤖 GPT определил режим: {mode}")
 
