@@ -4,6 +4,8 @@ from utils.embeddings import get_embedding
 from utils.gpt import ask_gpt, detect_ai_mode_gpt  # ⬅️ GPT-анализ
 from handlers.language import get_user_language
 from handlers.faq import find_faq_answer, translate_if_needed
+from fastapi.concurrency import run_in_threadpool
+
 
 # Простая оперативная "память" на время запроса (можно заменить на Supabase-хранилище при необходимости)
 SEARCH_CONTEXT = {}  # chat_id: {category, max_price, embedding, page, top_k}
@@ -84,7 +86,8 @@ async def handle_text_message_ai(chat_id: int, message: str):
         if is_follow_up and chat_id in SEARCH_CONTEXT:
             ctx = SEARCH_CONTEXT[chat_id]
             ctx["page"] += 1
-            results = call_match_documents(
+            results = await run_in_threadpool(
+                call_match_documents,
                 embedding=ctx["embedding"],
                 top_k=ctx.get("top_k", 5),
                 max_price=ctx.get("max_price")
@@ -109,7 +112,8 @@ async def handle_text_message_ai(chat_id: int, message: str):
                     detected_category = categories[key]
                     break
 
-            results = call_match_documents(
+            results = await run_in_threadpool(
+                call_match_documents,
                 embedding=embedding,
                 top_k=top_k,
                 max_price=max_price
