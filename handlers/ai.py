@@ -32,7 +32,9 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
 
     if not mode or mode == "detect":
         lowered = message.lower()
-        if any(x in lowered for x in ["водка", "вино", "виски", "до", "за", "р", "₽", "крепость", "объём", "покажи", "каталог"]):
+
+        # 💡 Приоритет: если явно похоже на поиск алкоголя — сразу режим search
+        if any(cat in lowered for cat in ["водка", "вино", "виски", "шампанское", "коньяк", "ром", "текила"]) and "до" in lowered:
             mode = "search"
         elif any(x in lowered for x in ["что ты умеешь", "кто ты", "привет", "ку", "как дела"]):
             mode = "chat"
