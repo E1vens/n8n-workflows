@@ -49,11 +49,6 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
             # 🔥 Повторно вызвать функцию, уже в режиме search
             return await handle_text_message_ai(chat_id, message, send_message)
 
-        if mode == "company":
-            mode = "faq"
-
-        set_ai_mode(chat_id, mode)
-
         # 📘 Переводим 'company' → 'faq'
         if mode == "company":
             mode = "faq"
