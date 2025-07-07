@@ -19,14 +19,24 @@ app = FastAPI()
 
 
 # --- Отправка сообщений в Telegram ---
-async def send_message(chat_id: int, text: str, reply_markup: dict | None = None, photo: str | None = None):
+async def send_message(
+    chat_id: int,
+    text: str,
+    reply_markup: dict | None = None,
+    photo: str | None = None,
+    use_markdown: bool = False  # 👈 добавляем флаг
+):
     payload = {"chat_id": chat_id}
 
     if photo:
         payload.update({"photo": photo, "caption": text})
         method = "sendPhoto"
+        if use_markdown:
+            payload["parse_mode"] = "Markdown"
     else:
         payload["text"] = text
+        if use_markdown:
+            payload["parse_mode"] = "Markdown"
         if reply_markup:
             payload["reply_markup"] = reply_markup
         method = "sendMessage"
