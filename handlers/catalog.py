@@ -16,7 +16,7 @@ CATEGORY_TRANSLATIONS = {
     "Вино": {"ru": "Вино", "en": "Wine", "es": "Vino"},
     "Крепкое вино": {"ru": "Крепкое вино", "en": "Fortified wine", "es": "Vino fortificado"},
     "Шампанское и игристое": {"ru": "Шампанское и игристое", "en": "Sparkling wine", "es": "Vino espumoso"},
-    "Коньяк и Арманьяк": {"ru": "Коньяк и Арманьяк", "en": "Cognac & Armagnac", "es": "Coñac y Armagnac"},
+    "Коньяк и Арманьяк": {"ru": "Коньяк и Арманьяк", "en": "Cognac & Armagnac", "es": "Co\u00f1ac y Armagnac"},
     "Кальвадос": {"ru": "Кальвадос", "en": "Calvados", "es": "Calvados"},
     "Другие": {"ru": "Другие", "en": "Other", "es": "Otros"},
 }
@@ -68,14 +68,19 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
             or product.get("metadata->>image")
         )
 
+        title = escape_markdown(product.get("title", "Без названия"))
+        url = escape_markdown(product.get("product_url", "#"))
+        price = escape_markdown(str(product.get("price", "?")))
+        volume = escape_markdown(str(product.get("volume", "?")))
+        strength = escape_markdown(str(product.get("strength", "?")))
+
         text = (
-            f"[📦 {product.get('title', 'Без названия')}]({product.get('product_url', '#')})\n"
-            f"{get_translated_text(chat_id, 'price')}: {product.get('price', '?')}₽\n"
-            f"{get_translated_text(chat_id, 'volume')}: {product.get('volume', '?')} • "
-            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}"
+            f"[📦 {title}]({url})\n"
+            f"Цена: {price}₽\n"
+            f"Объём: {volume} • Крепость: {strength}"
         )
 
-        await send_message(chat_id, text, photo=photo)
+        await send_message(chat_id, text, photo=photo, use_markdown=True)
 
     nav_buttons = []
     if page > 1:
