@@ -52,7 +52,7 @@ async def telegram_webhook(request: Request):
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "")
-            return await handle_callback_query(chat_id, data_value, send_message, get_ai_stop_keyboard)
+            return await handle_callback_query(chat_id, data_value, send_message, None)
 
         return {"ok": True}
 
