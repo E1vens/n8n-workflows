@@ -1,7 +1,7 @@
 import re
 from utils.supabase import get_ai_mode, set_ai_mode, clear_ai_mode, call_match_documents
 from utils.embeddings import get_embedding
-from utils.gpt import ask_gpt, detect_ai_mode_gpt  # ⬅️ GPT-анализ
+from utils.gpt import ask_gpt, detect_ai_mode_gpt
 from handlers.language import get_user_language
 from utils.formatting import escape_markdown
 from handlers.faq import find_faq_answer, translate_if_needed
@@ -135,8 +135,6 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
         if not results:
             return await send_message(chat_id, "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку.")
 
-        from utils.formatting import escape_markdown  # лучше перенести наверх файла
-
         for r in results:
             title = escape_markdown(r['title'])
             url = escape_markdown(r['product_url'])
@@ -154,6 +152,4 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
 
         return  # ✅ завершает режим search
 
-
-
-    return "⚠️ Неизвестный режим ИИ."
+    return None 
