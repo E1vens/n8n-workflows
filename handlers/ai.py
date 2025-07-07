@@ -30,22 +30,22 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
     if message.strip().lower() in IGNORED_FOR_AI:
         return None
 
-    if not mode or mode == "detect":
-        lowered = message.lower()
+    lowered = message.lower()
 
-        # 💡 Приоритет: если явно похоже на поиск алкоголя — сразу режим search
-        if any(cat in lowered for cat in ["водка", "вино", "виски", "шампанское", "коньяк", "ром", "текила"]) and "до" in lowered:
-            mode = "search"
-        elif any(x in lowered for x in ["что ты умеешь", "кто ты", "привет", "ку", "как дела"]):
+    # 🔁 Принудительно переключаем на режим search, даже если уже был установлен другой
+    if any(cat in lowered for cat in ["водка", "вино", "виски", "шампанское", "коньяк", "ром", "текила"]) and "до" in lowered:
+        mode = "search"
+        set_ai_mode(chat_id, mode)
+    elif not mode or mode == "detect":
+        if any(x in lowered for x in ["что ты умеешь", "кто ты", "привет", "ку", "как дела"]):
             mode = "chat"
         else:
             mode = await detect_ai_mode_gpt(message)
-
-        if mode == "company":
-            mode = "faq"
-
-        print(f"🤖 Режим ИИ определён как: {mode}")
+            if mode == "company":
+                mode = "faq"
         set_ai_mode(chat_id, mode)
+
+    print(f"🤖 Режим ИИ определён как: {mode}")
 
     if not mode:
         messages = [
