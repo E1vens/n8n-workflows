@@ -3,6 +3,7 @@ from utils.supabase import get_ai_mode, set_ai_mode, clear_ai_mode, call_match_d
 from utils.embeddings import get_embedding
 from utils.gpt import ask_gpt, detect_ai_mode_gpt  # ⬅️ GPT-анализ
 from handlers.language import get_user_language
+from utils.formatting import escape_markdown
 from handlers.faq import find_faq_answer, translate_if_needed
 from fastapi.concurrency import run_in_threadpool
 
@@ -132,11 +133,15 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
             results = [r for r in results if detected_category.lower() in r["title"].lower()]
 
         if not results:
-            return "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку."
+            return await send_message(chat_id, "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку.")
+
+        from utils.formatting import escape_markdown  # импорт в теле, можно перенести наверх файла
 
         msg = "\n\n".join([
-            f"[📦 {r['title']}]({r['product_url']})\n"
-            f"Цена: {r['price']}₽ • Объём: {r['volume']} {'(маленький образец)' if r['volume'] == '0.05 л' else ''} • Крепость: {r['strength']}"
+            f"[📦 {escape_markdown(r['title'])}]({escape_markdown(r['product_url'])})\n"
+            f"Цена: {escape_markdown(str(r['price']))}₽ • "
+            f"Объём: {escape_markdown(r['volume'])} {'\\(маленький образец\\)' if r['volume'] == '0.05 л' else ''} • "
+            f"Крепость: {escape_markdown(r['strength'])}"
             for r in results
         ])
         return await send_message(chat_id, msg, use_markdown=True)
