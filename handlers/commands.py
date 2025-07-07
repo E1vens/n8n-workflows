@@ -38,14 +38,16 @@ async def handle_text_message(chat_id: int, text: str, send_message):
     ai_mode = get_ai_mode(chat_id)
     if ai_mode:
         reply = await handle_text_message_ai(chat_id, text, send_message)
-        if reply:
+
+        if reply is not None:
             return await send_message(chat_id, reply, use_markdown=True)
+
+        # Если ответ пустой (None) → значит, фраза из списка игнорируемых
         return await send_message(
             chat_id,
             "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите /stop"
         )
-
-        
+  
     # --- ИИ консультант ---
     if text.lower() in ["🤖 ии консультант", "ии консультант", "ai assistant", "asistente ia"]:
         set_ai_mode(chat_id, "detect")
@@ -139,13 +141,6 @@ async def handle_text_message(chat_id: int, text: str, send_message):
             )
         else:
             return await send_message(chat_id, "⚠️ Не удалось получить данные карты.")
-
-    # --- По умолчанию ---
-    if get_ai_mode(chat_id):
-        return await send_message(
-            chat_id,
-            "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите /stop"
-        )
 
     return await send_message(
         chat_id,
