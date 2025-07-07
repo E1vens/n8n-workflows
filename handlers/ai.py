@@ -142,9 +142,4 @@ async def handle_text_message_ai(chat_id: int, message: str):
         return msg
 
     return "⚠️ Неизвестный режим ИИ."
-    
-def get_ai_stop_keyboard():
-    return {
-        "inline_keyboard": [
-
     }
