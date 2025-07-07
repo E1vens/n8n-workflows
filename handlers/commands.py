@@ -144,7 +144,7 @@ async def handle_text_message(chat_id: int, text: str, send_message):
     if get_ai_mode(chat_id):
         return await send_message(
             chat_id,
-            "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите `/stop`"
+            "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите /stop"
         )
 
     return await send_message(
