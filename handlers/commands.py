@@ -142,9 +142,15 @@ async def handle_text_message(chat_id: int, text: str, send_message):
 
     # --- По умолчанию ---
     if get_ai_mode(chat_id):
+        reply_markup = {
+            "inline_keyboard": [
+                [{"text": "🛑 Завершить ИИ-режим", "callback_data": "/stop"}]
+            ]
+        }
         return await send_message(
             chat_id,
-            "⚠️ Чтобы использовать эту функцию, отправьте команду /stop, чтобы завершить диалог с ИИ."
+            "⚠️ Чтобы использовать эту функцию, нажмите кнопку ниже:",
+            reply_markup=reply_markup
         )
 
     return await send_message(
