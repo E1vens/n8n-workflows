@@ -68,11 +68,10 @@ async def handle_category_selection(chat_id: int, cat_id: str, send_message, pag
         )
 
         text = (
-            f"*{product.get('title', 'Без названия')}*\n"
+            f"[📦 {product.get('title', 'Без названия')}]({product.get('product_url', '#')})\n"
             f"{get_translated_text(chat_id, 'price')}: {product.get('price', '?')}₽\n"
             f"{get_translated_text(chat_id, 'volume')}: {product.get('volume', '?')} • "
-            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}\n"
-            f"[🔗 {get_translated_text(chat_id, 'view_product')}]({product.get('product_url', '#')})"
+            f"{get_translated_text(chat_id, 'strength')}: {product.get('strength', '?')}"
         )
 
         await send_message(chat_id, text, photo=photo)
