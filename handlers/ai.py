@@ -135,15 +135,25 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
         if not results:
             return await send_message(chat_id, "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку.")
 
-        from utils.formatting import escape_markdown  # импорт в теле, можно перенести наверх файла
+        from utils.formatting import escape_markdown  # лучше перенести наверх файла
 
-        msg = "\n\n".join([
-            f"[📦 {escape_markdown(r['title'])}]({escape_markdown(r['product_url'])})\n"
-            f"Цена: {escape_markdown(str(r['price']))}₽ • "
-            f"Объём: {escape_markdown(r['volume'])} {'\\(маленький образец\\)' if r['volume'] == '0.05 л' else ''} • "
-            f"Крепость: {escape_markdown(r['strength'])}"
-            for r in results
-        ])
-        return await send_message(chat_id, msg, use_markdown=True)
+        for r in results:
+            title = escape_markdown(r['title'])
+            url = escape_markdown(r['product_url'])
+            price = escape_markdown(str(r['price']))
+            volume = escape_markdown(r['volume'])
+            strength = escape_markdown(r['strength'])
+            is_sample = " \\(маленький образец\\)" if volume == "0.05 л" else ""
+
+            msg = (
+                f"[📦 {title}]({url})\n"
+                f"Цена: {price}₽ • Объём: {volume}{is_sample} • Крепость: {strength}"
+            )
+
+            await send_message(chat_id, msg, use_markdown=True)
+
+        return  # ✅ завершает режим search
+
+
 
     return "⚠️ Неизвестный режим ИИ."
