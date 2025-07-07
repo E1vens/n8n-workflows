@@ -52,7 +52,6 @@ async def handle_text_message(chat_id: int, text: str, send_message):
         return await send_message(
             chat_id,
             "Напишите свой вопрос, и ИИ сам поймёт, чем помочь 🤖",
-            reply_markup=get_ai_stop_keyboard(),
         )
 
     # --- /start ---
