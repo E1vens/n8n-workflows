@@ -31,8 +31,16 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
         return None
 
     if not mode or mode == "detect":
-        mode = await detect_ai_mode_gpt(message)
-        print(f"🤖 GPT определил режим: {mode}")
+        lowered = message.lower()
+        if any(x in lowered for x in ["водка", "вино", "виски", "до", "за", "р", "₽", "крепость", "объём", "покажи", "каталог"]):
+            mode = "search"
+        elif any(x in lowered for x in ["что ты умеешь", "кто ты", "привет", "ку", "как дела"]):
+            mode = "chat"
+        else:
+            mode = await detect_ai_mode_gpt(message)
+
+    print(f"🤖 Режим ИИ определён как: {mode}")
+    set_ai_mode(chat_id, mode)
 
         if mode == "company":
             mode = "faq"
