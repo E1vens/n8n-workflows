@@ -30,9 +30,9 @@ async def send_message(
 
     if photo:
         payload.update({"photo": photo, "caption": text})
-        method = "sendPhoto"
         if use_markdown:
             payload["parse_mode"] = "Markdown"
+        method = "sendPhoto"
     else:
         payload["text"] = text
         if use_markdown:
