@@ -39,7 +39,7 @@ async def handle_text_message(chat_id: int, text: str, send_message):
     if ai_mode:
         reply = await handle_text_message_ai(chat_id, text)
         if reply:
-            return await send_message(chat_id, reply)
+            return await send_message(chat_id, reply, use_markdown=True)
 
         return await send_message(
             chat_id,
