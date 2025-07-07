@@ -40,7 +40,11 @@ async def handle_text_message(chat_id: int, text: str, send_message):
         reply = await handle_text_message_ai(chat_id, text, send_message)
         if reply:
             return await send_message(chat_id, reply, use_markdown=True)
-        return
+        return await send_message(
+            chat_id,
+            "⚠️ Чтобы использовать эту функцию, сначала завершите диалог с ИИ.\n\nНапишите /stop"
+        )
+
         
     # --- ИИ консультант ---
     if text.lower() in ["🤖 ии консультант", "ии консультант", "ai assistant", "asistente ia"]:
