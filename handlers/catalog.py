@@ -2,6 +2,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from fastapi.concurrency import run_in_threadpool
 from utils.supabase import match_documents_by_category, get_distinct_categories
 from handlers.language import get_user_language, get_translated_text
+from utils.formatting import escape_markdown
 from math import ceil
 from hashlib import sha1
 
