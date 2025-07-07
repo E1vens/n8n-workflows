@@ -3,7 +3,6 @@ from config import TELEGRAM_API_URL
 from handlers.commands import handle_text_message
 from handlers.callbacks import handle_callback_query
 from handlers.age import is_confirmed, handle_age_confirmation, request_age_confirmation
-from handlers.ai import get_ai_stop_keyboard
 from fastapi.concurrency import run_in_threadpool
 from handlers.buttons import get_main_menu
 import httpx
