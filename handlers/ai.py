@@ -36,7 +36,7 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
     if not mode or mode == "detect":
         mode = await detect_ai_mode_gpt(message)
 
-        # 🛠 2. Если GPT вернул 'chat', но в тексте есть признаки поиска алкоголя — меняем на 'search'
+        # 🛠 Если GPT вернул 'chat', но текст явно про поиск алкоголя — переключаемся на 'search' и выходим сразу
         if (
             mode == "chat"
             and any(cat in lowered for cat in ["водка", "вино", "виски", "шампанское", "коньяк", "ром", "текила"])
@@ -44,6 +44,15 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
         ):
             print("🔁 GPT вернул 'chat', но найден паттерн запроса — переключаем на 'search'")
             mode = "search"
+            set_ai_mode(chat_id, mode)
+
+            # 🔥 Повторно вызвать функцию, уже в режиме search
+            return await handle_text_message_ai(chat_id, message, send_message)
+
+        if mode == "company":
+            mode = "faq"
+
+        set_ai_mode(chat_id, mode)
 
         # 📘 Переводим 'company' → 'faq'
         if mode == "company":
