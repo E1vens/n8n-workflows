@@ -52,6 +52,11 @@ async def telegram_webhook(request: Request):
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "")
+
+            # 👉 Обработка кнопки "/stop"
+            if data_value == "/stop":
+                return await handle_text_message(chat_id, "/stop", send_message)
+
             return await handle_callback_query(chat_id, data_value, send_message, None)
 
         return {"ok": True}
