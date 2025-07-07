@@ -39,12 +39,10 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
         else:
             mode = await detect_ai_mode_gpt(message)
 
-    print(f"🤖 Режим ИИ определён как: {mode}")
-    set_ai_mode(chat_id, mode)
-
         if mode == "company":
             mode = "faq"
 
+        print(f"🤖 Режим ИИ определён как: {mode}")
         set_ai_mode(chat_id, mode)
 
     if not mode:
