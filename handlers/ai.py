@@ -26,7 +26,8 @@ async def enable_ai_assistant(chat_id, send_message):
     await send_message(chat_id, "Выберите режим работы ИИ:", reply_markup)
 
 
-async def handle_text_message_ai(chat_id: int, message: str):
+async def handle_text_message_ai(chat_id: int, message: str, send_message):
+
     mode = get_ai_mode(chat_id)
 
     # ❌ Не активируем ИИ на системные фразы-кнопки
