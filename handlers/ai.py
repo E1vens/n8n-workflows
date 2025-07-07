@@ -16,22 +16,9 @@ FOLLOW_UP_PHRASES = [
 ]
 
 
-async def enable_ai_assistant(chat_id, send_message):
-    reply_markup = {
-        "inline_keyboard": [
-            [{"text": "🔍 Поиск товаров", "callback_data": "ai_mode:search"}],
-            [{"text": "💬 Живой чат", "callback_data": "ai_mode:chat"}],
-            [{"text": "❓ Вопрос про компанию", "callback_data": "ai_mode:faq"}]
-        ]
-    }
-    await send_message(chat_id, "Выберите режим работы ИИ:", reply_markup)
-
-
 async def handle_text_message_ai(chat_id: int, message: str, send_message):
-
     mode = get_ai_mode(chat_id)
 
-    # ❌ Не активируем ИИ на системные фразы-кнопки
     IGNORED_FOR_AI = [
         "🤖 ии консультант", "ии консультант", "ai assistant", "asistente ia",
         "каталог", "🛍 каталог",
@@ -52,21 +39,23 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
 
         set_ai_mode(chat_id, mode)
 
-    
     if not mode:
         messages = [
             {"role": "system", "content": "Ты умный помощник. Отвечай дружелюбно и понятно."},
             {"role": "user", "content": message}
         ]
-        return await ask_gpt(messages)
-
+        response = await ask_gpt(messages)
+        escaped = escape_markdown(response)
+        return await send_message(chat_id, escaped, use_markdown=True)
 
     if mode == "chat":
         messages = [
             {"role": "system", "content": "Ты умный помощник, говори дружелюбно и кратко."},
             {"role": "user", "content": message}
         ]
-        return await ask_gpt(messages)
+        response = await ask_gpt(messages)
+        escaped = escape_markdown(response)
+        return await send_message(chat_id, escaped, use_markdown=True)
 
     if mode == "faq":
         lang = get_user_language(chat_id) or "ru"
@@ -79,7 +68,9 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
             {"role": "system", "content": "Ты консультант компании, рассказывай строго и уверенно."},
             {"role": "user", "content": message}
         ]
-        return await ask_gpt(messages)
+        response = await ask_gpt(messages)
+        escaped = escape_markdown(response)
+        return await send_message(chat_id, escaped, use_markdown=True)
 
     if mode == "search":
         text = message.lower()
@@ -150,6 +141,6 @@ async def handle_text_message_ai(chat_id: int, message: str, send_message):
 
             await send_message(chat_id, msg, use_markdown=True)
 
-        return  # ✅ завершает режим search
+        return
 
-    return None 
+    return None
