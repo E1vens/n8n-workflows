@@ -134,9 +134,8 @@ async def handle_text_message_ai(chat_id: int, message: str):
             return "❌ Ничего не найдено по вашему запросу. Попробуйте изменить формулировку."
 
         msg = "\n\n".join([
-            f"📦 *{r['title']}*\n"
-            f"Цена: {r['price']}₽ • Объём: {r['volume']} {'(маленький образец)' if r['volume'] == '0.05 л' else ''} • Крепость: {r['strength']}\n"
-            f"[🔗 Ссылка на товар]({r['product_url']})"
+            f"[📦 {r['title']}]({r['product_url']})\n"
+            f"Цена: {r['price']}₽ • Объём: {r['volume']} {'(маленький образец)' if r['volume'] == '0.05 л' else ''} • Крепость: {r['strength']}"
             for r in results
         ])
         return msg
