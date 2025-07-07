@@ -27,7 +27,6 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         method = "sendPhoto"
     else:
         payload["text"] = text
-        payload["parse_mode"] = "Markdown"
         if reply_markup:
             payload["reply_markup"] = reply_markup
         method = "sendMessage"
