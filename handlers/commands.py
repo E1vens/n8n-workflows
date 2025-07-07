@@ -10,7 +10,6 @@ from handlers.ai import (
     get_ai_mode,
     clear_ai_mode,
     handle_text_message_ai,
-    get_ai_stop_keyboard,
 )
 from fastapi.concurrency import run_in_threadpool
 
