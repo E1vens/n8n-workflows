@@ -40,9 +40,9 @@ jobs:
 
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
+
             if [ ! -d "$DEPLOY_DIR" ]; then
               git clone git@github.com:${{ github.repository }} "$DEPLOY_DIR"
-
             fi
 
             cd "$DEPLOY_DIR"
@@ -62,6 +62,9 @@ jobs:
             echo "⏳ Жду 60 секунд, чтобы бот успел обработать действия в Telegram..."
             sleep 60
 
-            echo "📦 Логи контейнера $CONTAINER_NAME:"
-            docker logs "$CONTAINER_NAME" --tail=100 || echo "Контейнер не стартовал или нет логов"
+            echo "📦 Логи контейнера(ов), связанных с $CONTAINER_NAME:"
+            docker ps -a --filter "name=$CONTAINER_NAME" --format "{{.Names}}" | while read cname; do
+              echo "---- Логи: $cname ----"
+              docker logs "$cname" --tail=100 || echo "Контейнер не стартовал или нет логов"
+            done
           EOF
