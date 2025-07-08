@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      - test/**
+      - test*
 
 jobs:
   deploy:
@@ -20,16 +22,44 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy on VPS
+      - name: Deploy to server (main or test)
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          BRANCH="${{ github.ref_name }}"
+
+          if [[ "$BRANCH" == "main" ]]; then
+            echo "▶️ Продакшн-деплой"
+            DEPLOY_DIR="/root/veld21-bot"
+            CONTAINER_NAME="veld21-bot"
+            BOT_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
+          else
+            echo "🧪 Тест-деплой из ветки $BRANCH"
+            DEPLOY_DIR="/root/veld21-bot-test"
+            CONTAINER_NAME="veld21-bot-test"
+            BOT_TOKEN="${{ secrets.TEST_TELEGRAM_TOKEN }}"
+          fi
+
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
-            cd /root/veld21-bot
-            git pull origin main
-            docker compose down
-            docker compose up -d --build
+            if [ ! -d "$DEPLOY_DIR" ]; then
+              git clone https://github.com/${{ github.repository }} "$DEPLOY_DIR"
+            fi
+
+            cd "$DEPLOY_DIR"
+            git fetch origin
+            git checkout "$BRANCH"
+            git reset --hard origin/"$BRANCH"
+
+            echo "TELEGRAM_API_URL=https://api.telegram.org/bot" > .env
+            echo "TELEGRAM_TOKEN=$BOT_TOKEN" >> .env
+            echo "TEST_TELEGRAM_TOKEN=${{ secrets.TEST_TELEGRAM_TOKEN }}" >> .env
+            echo "GIT_BRANCH=$BRANCH" >> .env
+
+            docker compose -p "$CONTAINER_NAME" down
+            docker compose -p "$CONTAINER_NAME" up -d --build
+
             echo "⏳ Жду 60 секунд, чтобы бот успел обработать действия в Telegram..."
             sleep 60
-            echo "📦 Логи контейнера после 60 секунд работы:"
-            docker logs veld21-bot --tail=100 || echo "Контейнер не стартовал или нет логов"
+
+            echo "📦 Логи контейнера $CONTAINER_NAME:"
+            docker logs "$CONTAINER_NAME" --tail=100 || echo "Контейнер не стартовал или нет логов"
           EOF
