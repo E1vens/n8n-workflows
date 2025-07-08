@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   bot:
     build: .
@@ -14,3 +16,7 @@ services:
       - traefik
     expose:
       - "8000"
+
+networks:
+  traefik:
+    external: true
