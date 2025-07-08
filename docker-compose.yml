@@ -3,16 +3,17 @@ version: "3.9"
 services:
   bot:
     build: .
+    container_name: veld21-bot-bot
     restart: always
     dns:
       - 8.8.8.8
       - 1.1.1.1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.weld21bot.rule=Host(`test-bot.veld-21.ru`)"
-      - "traefik.http.routers.weld21bot.entrypoints=websecure"
-      - "traefik.http.routers.weld21bot.tls.certresolver=le"
-      - "traefik.http.services.weld21bot.loadbalancer.server.port=8000"
+      - "traefik.http.routers.veld21bot.rule=Host(`bot.veld-21.ru`)"
+      - "traefik.http.routers.veld21bot.entrypoints=websecure"
+      - "traefik.http.routers.veld21bot.tls.certresolver=le"
+      - "traefik.http.services.veld21bot.loadbalancer.server.port=8000"
     networks:
       - traefik
     expose:
