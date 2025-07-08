@@ -1,9 +1,6 @@
-version: "3.9"
-
 services:
   bot:
     build: .
-    container_name: veld21-bot
     restart: always
     dns:
       - 8.8.8.8
@@ -17,7 +14,3 @@ services:
       - traefik
     expose:
       - "8000"
-
-networks:
-  traefik:
-    external: true
