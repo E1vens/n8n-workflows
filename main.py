@@ -9,6 +9,7 @@ import httpx
 import json
 import traceback
 import logging
+import os
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,6 +18,15 @@ logging.basicConfig(
 
 app = FastAPI()
 
+# --- Выбор токена в зависимости от ветки ---
+branch = os.getenv("GIT_BRANCH", "main")
+if branch == "main":
+    TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+else:
+    TELEGRAM_TOKEN = os.getenv("TEST_TELEGRAM_TOKEN")
+
+API_URL = f"{TELEGRAM_API_URL}{TELEGRAM_TOKEN}"
+
 
 # --- Отправка сообщений в Telegram ---
 async def send_message(
@@ -24,7 +34,7 @@ async def send_message(
     text: str,
     reply_markup: dict | None = None,
     photo: str | None = None,
-    use_markdown: bool = False  # 👈 добавляем флаг
+    use_markdown: bool = False
 ):
     payload = {"chat_id": chat_id}
 
@@ -44,8 +54,9 @@ async def send_message(
     logging.info("Payload: %s", json.dumps(payload, indent=2, ensure_ascii=False))
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(f"{TELEGRAM_API_URL}/{method}", json=payload)
+        response = await client.post(f"{API_URL}/{method}", json=payload)
         logging.info("Ответ Telegram: %s %s", response.status_code, response.content.decode())
+
 
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
@@ -62,7 +73,6 @@ async def telegram_webhook(request: Request):
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "")
 
-            # 👉 Обработка кнопки "/stop"
             if data_value == "/stop":
                 return await handle_text_message(chat_id, "/stop", send_message)
 
