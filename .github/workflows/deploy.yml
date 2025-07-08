@@ -10,24 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-    - name: Setup SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.VPS_KEY_B64 }}" | base64 -d > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_KEY_B64 }}" | base64 -d > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-    - name: Deploy on VPS
-      run: |
-        ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-          set -e
-          cd /root/veld21-bot
-          git pull origin main
-          docker compose down
-          docker compose up -d --build
-          echo "📦 Логи контейнера после запуска:"
-          docker logs veld21-bot --tail=50 || echo "Контейнер не стартовал или нет логов"
-        EOF
+      - name: Deploy on VPS
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e
+            cd /root/veld21-bot
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
+            echo "⏳ Жду 60 секунд, чтобы бот успел обработать действия в Telegram..."
+            sleep 60
+            echo "📦 Логи контейнера после 60 секунд работы:"
+            docker logs veld21-bot --tail=100 || echo "Контейнер не стартовал или нет логов"
+          EOF
