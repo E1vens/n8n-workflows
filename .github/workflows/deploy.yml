@@ -41,7 +41,8 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
             if [ ! -d "$DEPLOY_DIR" ]; then
-              git clone https://github.com/${{ github.repository }} "$DEPLOY_DIR"
+              git clone git@github.com:${{ github.repository }} "$DEPLOY_DIR"
+
             fi
 
             cd "$DEPLOY_DIR"
