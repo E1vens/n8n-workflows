@@ -50,10 +50,10 @@ jobs:
             git checkout "$BRANCH"
             git reset --hard origin/"$BRANCH"
 
-            echo "TELEGRAM_API_URL=https://api.telegram.org/bot" > .env
-            echo "TELEGRAM_TOKEN=$BOT_TOKEN" >> .env
+            echo "TELEGRAM_TOKEN=$BOT_TOKEN" > .env
             echo "TEST_TELEGRAM_TOKEN=${{ secrets.TEST_TELEGRAM_TOKEN }}" >> .env
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+            echo "SUPABASE_APIKEY=${{ secrets.SUPABASE_APIKEY }}" >> .env
             echo "GIT_BRANCH=$BRANCH" >> .env
 
             docker compose -p "$CONTAINER_NAME" down
