@@ -22,24 +22,29 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to server (main or test)
+      - name: Deploy to server
         run: |
           BRANCH="${{ github.ref_name }}"
 
           if [[ "$BRANCH" == "main" ]]; then
             echo "▶️ Продакшн-деплой"
             DEPLOY_DIR="/root/veld21-bot"
-            CONTAINER_NAME="veld21-bot"
+            COMPOSE_FILE="docker-compose.yml"
+            CONTAINER_NAME="veld21-bot-bot"
             BOT_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
+            WEBHOOK_URL="https://bot.veld-21.ru/webhook"
           else
             echo "🧪 Тест-деплой из ветки $BRANCH"
             DEPLOY_DIR="/root/veld21-bot-test"
-            CONTAINER_NAME="veld21-bot-test"
+            COMPOSE_FILE="docker-compose.test.yml"
+            CONTAINER_NAME="veld21-bot-test-bot"
             BOT_TOKEN="${{ secrets.TEST_TELEGRAM_TOKEN }}"
+            WEBHOOK_URL="https://test-bot.veld-21.ru/webhook"
           fi
 
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
+
             if [ ! -d "$DEPLOY_DIR" ]; then
               git clone git@github.com:${{ github.repository }} "$DEPLOY_DIR"
             fi
@@ -49,18 +54,20 @@ jobs:
             git checkout "$BRANCH"
             git reset --hard origin/"$BRANCH"
 
-            echo "TELEGRAM_API_URL=https://api.telegram.org/bot" > .env
-            echo "TELEGRAM_TOKEN=$BOT_TOKEN" >> .env
-            echo "TEST_TELEGRAM_TOKEN=${{ secrets.TEST_TELEGRAM_TOKEN }}" >> .env
+            echo "TELEGRAM_TOKEN=$BOT_TOKEN" > .env
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+            echo "SUPABASE_APIKEY=${{ secrets.SUPABASE_APIKEY }}" >> .env
             echo "GIT_BRANCH=$BRANCH" >> .env
 
-            docker compose -p "$CONTAINER_NAME" down
-            docker compose -p "$CONTAINER_NAME" up -d --build
+            docker compose -f "$COMPOSE_FILE" -p "$CONTAINER_NAME" down
+            docker compose -f "$COMPOSE_FILE" -p "$CONTAINER_NAME" up -d --build
 
-            echo "⏳ Жду 60 секунд, чтобы бот успел обработать действия в Telegram..."
+            echo "🔗 Устанавливаем Webhook: $WEBHOOK_URL"
+            curl "https://api.telegram.org/bot$BOT_TOKEN/setWebhook?url=$WEBHOOK_URL"
+
+            echo "⏳ Жду 60 секунд..."
             sleep 60
 
-            echo "📦 Логи контейнера $CONTAINER_NAME:"
+            echo "📦 Логи контейнера:"
             docker logs "$CONTAINER_NAME" --tail=100 || echo "Контейнер не стартовал или нет логов"
           EOF
