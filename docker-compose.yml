@@ -9,9 +9,10 @@ services:
       - 1.1.1.1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.veld21-bot.rule=Host(`bot.veld-21.ru`)"
-      - "traefik.http.routers.veld21-bot.entrypoints=websecure"
-      - "traefik.http.routers.veld21-bot.tls.certresolver=le"
+      - "traefik.http.routers.weld21bot.rule=Host(`test-bot.veld-21.ru`)"
+      - "traefik.http.routers.weld21bot.entrypoints=websecure"
+      - "traefik.http.routers.weld21bot.tls.certresolver=le"
+      - "traefik.http.services.weld21bot.loadbalancer.server.port=8000"
     networks:
       - traefik
     expose:
