@@ -3,20 +3,20 @@ version: "3.9"
 services:
   bot:
     build: .
-    container_name: veld21-bot-test  # <-- отличается от продакшн
+    container_name: veld21-bot-test
     restart: always
     dns:
       - 8.8.8.8
       - 1.1.1.1
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.veld21-bot-test.rule=Host(`test-bot.veld-21.ru`)"  # <-- поддомен для теста
+      - "traefik.http.routers.veld21-bot-test.rule=Host(`test-bot.veld-21.ru`)"
       - "traefik.http.routers.veld21-bot-test.entrypoints=websecure"
       - "traefik.http.routers.veld21-bot-test.tls.certresolver=le"
     networks:
       - traefik
     expose:
-      - "8000"  # ⚠️ expose, не ports — т.к. Traefik сам проксирует
+      - "8000" 
 
 networks:
   traefik:
