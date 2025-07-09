@@ -3,6 +3,7 @@ from config import SUPABASE_URL, SUPABASE_KEY
 from datetime import datetime
 from fastapi import Request
 import traceback
+import os
 import httpx
 
 # Функция регистрации или проверки карты в Supabase через REST API
@@ -51,7 +52,6 @@ def register_loyalty_card(chat_id: int) -> tuple[str, dict | None]:
 
 # Асинхронная функция отправки сообщений через Telegram API
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
-    from config import TELEGRAM_API_URL
     async with httpx.AsyncClient() as client:
         payload = {
             "chat_id": chat_id,
@@ -60,7 +60,9 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         }
         if reply_markup:
             payload["reply_markup"] = reply_markup
-        await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
+
+        url = f"https://api.telegram.org/bot{os.getenv('TELEGRAM_TOKEN')}/sendMessage"
+        await client.post(url, json=payload)
 
 # Отправка информации о карте лояльности
 async def send_loyalty_info(chat_id: int):
