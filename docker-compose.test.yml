@@ -13,6 +13,7 @@ services:
       - "traefik.http.routers.veld21-bot-test.rule=Host(`test-bot.veld-21.ru`)"
       - "traefik.http.routers.veld21-bot-test.entrypoints=websecure"
       - "traefik.http.routers.veld21-bot-test.tls.certresolver=le"
+      - "traefik.http.services.veld21-bot-test.loadbalancer.server.port=8000"
     networks:
       - traefik
     expose:
