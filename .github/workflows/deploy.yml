@@ -30,14 +30,14 @@ jobs:
             echo "▶️ Продакшн-деплой"
             DEPLOY_DIR="/root/veld21-bot"
             COMPOSE_FILE="docker-compose.yml"
-            CONTAINER_NAME="veld21-bot-bot"
+            CONTAINER_NAME="veld21-bot"
             BOT_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
             WEBHOOK_URL="https://bot.veld-21.ru/webhook"
           else
             echo "🧪 Тест-деплой из ветки $BRANCH"
             DEPLOY_DIR="/root/veld21-bot-test"
             COMPOSE_FILE="docker-compose.test.yml"
-            CONTAINER_NAME="veld21-bot-test-bot"
+            CONTAINER_NAME="veld21-bot-test"
             BOT_TOKEN="${{ secrets.TEST_TELEGRAM_TOKEN }}"
             WEBHOOK_URL="https://test-bot.veld-21.ru/webhook"
           fi
@@ -58,12 +58,15 @@ jobs:
             echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
             echo "SUPABASE_APIKEY=${{ secrets.SUPABASE_APIKEY }}" >> .env
             echo "GIT_BRANCH=$BRANCH" >> .env
+            echo "WEBHOOK_URL=$WEBHOOK_URL" >> .env
 
             docker compose -f "$COMPOSE_FILE" -p "$CONTAINER_NAME" down
             docker compose -f "$COMPOSE_FILE" -p "$CONTAINER_NAME" up -d --build
 
             echo "🔗 Устанавливаем Webhook: $WEBHOOK_URL"
-            curl "https://api.telegram.org/bot$BOT_TOKEN/setWebhook?url=$WEBHOOK_URL"
+            curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/setWebhook" \
+                -H "Content-Type: application/json" \
+                -d "{\"url\": \"$WEBHOOK_URL\"}"
 
             echo "⏳ Жду 60 секунд..."
             sleep 60
