@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-      - test/**
-      - test*
 
 jobs:
   deploy:
@@ -22,25 +20,14 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to server
+      - name: Deploy production bot
         run: |
           BRANCH="${{ github.ref_name }}"
-
-          if [[ "$BRANCH" == "main" ]]; then
-            echo "▶️ Продакшн-деплой"
-            DEPLOY_DIR="/root/veld21-bot"
-            COMPOSE_FILE="docker-compose.yml"
-            CONTAINER_NAME="veld21-bot"
-            BOT_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
-            WEBHOOK_URL="https://bot.veld-21.ru/webhook"
-          else
-            echo "🧪 Тест-деплой из ветки $BRANCH"
-            DEPLOY_DIR="/root/veld21-bot-test"
-            COMPOSE_FILE="docker-compose.test.yml"
-            CONTAINER_NAME="veld21-bot-test"
-            BOT_TOKEN="${{ secrets.TEST_TELEGRAM_TOKEN }}"
-            WEBHOOK_URL="https://test-bot.veld-21.ru/webhook"
-          fi
+          DEPLOY_DIR="/root/veld21-bot"
+          COMPOSE_FILE="docker-compose.yml"
+          CONTAINER_NAME="veld21-bot"
+          BOT_TOKEN="${{ secrets.TELEGRAM_TOKEN }}"
+          WEBHOOK_URL="https://bot.veld-21.ru/webhook"
 
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.VPS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
@@ -65,8 +52,8 @@ jobs:
 
             echo "🔗 Устанавливаем Webhook: $WEBHOOK_URL"
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/setWebhook" \
-                -H "Content-Type: application/json" \
-                -d "{\"url\": \"$WEBHOOK_URL\"}"
+              -H "Content-Type: application/json" \
+              -d "{\"url\": \"$WEBHOOK_URL\"}"
 
             echo "⏳ Жду 60 секунд..."
             sleep 60
