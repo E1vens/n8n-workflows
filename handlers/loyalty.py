@@ -1,9 +1,8 @@
 import requests
-from config import SUPABASE_URL, SUPABASE_KEY
+from config import SUPABASE_URL, SUPABASE_KEY, TELEGRAM_API_URL
 from datetime import datetime
 from fastapi import Request
 import traceback
-import os
 import httpx
 
 # Функция регистрации или проверки карты в Supabase через REST API
@@ -61,8 +60,8 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         if reply_markup:
             payload["reply_markup"] = reply_markup
 
-        url = f"https://api.telegram.org/bot{os.getenv('TELEGRAM_TOKEN')}/sendMessage"
-        await client.post(url, json=payload)
+        await client.post(TELEGRAM_API_URL, json=payload)
+
 
 # Отправка информации о карте лояльности
 async def send_loyalty_info(chat_id: int):
@@ -83,9 +82,12 @@ async def send_loyalty_info(chat_id: int):
     )
     await send_message(chat_id, text)
 
+
 # Основная функция-обработчик команды "Карта лояльности"
 async def handle_loyalty_card(chat_id: int):
+    from fastapi.concurrency import run_in_threadpool
     status, data = await run_in_threadpool(register_loyalty_card, chat_id)
+
     if status == "exists" and data:
         tier = data.get("tier", "Bronze").capitalize()
         total_orders = data.get("total_orders", 0)
@@ -100,6 +102,3 @@ async def handle_loyalty_card(chat_id: int):
         await send_message(chat_id, "🎉 Ваша карта лояльности успешно создана!")
     else:
         await send_message(chat_id, "⚠️ Не удалось проверить карту. Попробуйте позже.")
-
-# Чтобы использовать run_in_threadpool (FastAPI util)
-from fastapi.concurrency import run_in_threadpool
