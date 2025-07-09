@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request
-from config import TELEGRAM_API_URL
 from handlers.commands import handle_text_message
 from handlers.callbacks import handle_callback_query
 from handlers.age import is_confirmed, handle_age_confirmation, request_age_confirmation
 from fastapi.concurrency import run_in_threadpool
 from handlers.buttons import get_main_menu
+from config import TELEGRAM_API_URL
 import httpx
 import json
 import traceback
@@ -24,9 +24,6 @@ if branch == "main":
     TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 else:
     TELEGRAM_TOKEN = os.getenv("TEST_TELEGRAM_TOKEN")
-
-API_URL = f"{TELEGRAM_API_URL}{TELEGRAM_TOKEN}"
-
 
 # --- Отправка сообщений в Telegram ---
 async def send_message(
@@ -54,7 +51,7 @@ async def send_message(
     logging.info("Payload: %s", json.dumps(payload, indent=2, ensure_ascii=False))
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(f"{API_URL}/{method}", json=payload)
+        response = await client.post(f"{TELEGRAM_API_URL}/{method}", json=payload)
         logging.info("Ответ Telegram: %s %s", response.status_code, response.content.decode())
 
 
