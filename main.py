@@ -25,7 +25,7 @@ if branch == "main":
 else:
     TELEGRAM_TOKEN = os.getenv("TEST_TELEGRAM_TOKEN")
 
-API_URL = f"{TELEGRAM_API_URL}{TELEGRAM_TOKEN}"
+API_URL = TELEGRAM_API_URL
 
 
 # --- Отправка сообщений в Telegram ---
