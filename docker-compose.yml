@@ -3,7 +3,7 @@ version: "3.9"
 services:
   bot:
     build: .
-    container_name: veld21-bot-bot
+    container_name: veld21-bot
     restart: always
     dns:
       - 8.8.8.8
