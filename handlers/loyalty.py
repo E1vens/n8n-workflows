@@ -1,11 +1,13 @@
+import os
 import requests
-from config import SUPABASE_URL, SUPABASE_KEY
+import httpx
+import traceback
 from datetime import datetime
 from fastapi import Request
-import traceback
-import httpx
+from fastapi.concurrency import run_in_threadpool
+from config import SUPABASE_URL, SUPABASE_KEY
 
-# Функция регистрации или проверки карты в Supabase через REST API
+# 📦 Функция регистрации или проверки карты в Supabase через REST API
 def register_loyalty_card(chat_id: int) -> tuple[str, dict | None]:
     headers = {
         "apikey": SUPABASE_KEY,
@@ -48,10 +50,8 @@ def register_loyalty_card(chat_id: int) -> tuple[str, dict | None]:
         print(traceback.format_exc())
         return "error", None
 
-
-# Асинхронная функция отправки сообщений через Telegram API
+# 📬 Асинхронная функция отправки сообщений через Telegram API
 async def send_message(chat_id: int, text: str, reply_markup: dict | None = None):
-    from config import TELEGRAM_API_URL
     async with httpx.AsyncClient() as client:
         payload = {
             "chat_id": chat_id,
@@ -60,9 +60,12 @@ async def send_message(chat_id: int, text: str, reply_markup: dict | None = None
         }
         if reply_markup:
             payload["reply_markup"] = reply_markup
-        await client.post(f"{TELEGRAM_API_URL}/sendMessage", json=payload)
 
-# Отправка информации о карте лояльности
+        telegram_token = os.getenv("TELEGRAM_TOKEN")
+        url = f"https://api.telegram.org/bot{telegram_token}/sendMessage"
+        await client.post(url, json=payload)
+
+# ℹ️ Информационный блок с описанием карты
 async def send_loyalty_info(chat_id: int):
     text = (
         "🎁 *Карта лояльности Veld21*\n\n"
@@ -81,7 +84,7 @@ async def send_loyalty_info(chat_id: int):
     )
     await send_message(chat_id, text)
 
-# Основная функция-обработчик команды "Карта лояльности"
+# 🔄 Основная функция-обработчик команды "Карта лояльности"
 async def handle_loyalty_card(chat_id: int):
     status, data = await run_in_threadpool(register_loyalty_card, chat_id)
     if status == "exists" and data:
@@ -98,6 +101,3 @@ async def handle_loyalty_card(chat_id: int):
         await send_message(chat_id, "🎉 Ваша карта лояльности успешно создана!")
     else:
         await send_message(chat_id, "⚠️ Не удалось проверить карту. Попробуйте позже.")
-
-# Чтобы использовать run_in_threadpool (FastAPI util)
-from fastapi.concurrency import run_in_threadpool
