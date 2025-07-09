@@ -51,8 +51,8 @@ jobs:
             echo "GIT_BRANCH=$BRANCH" >> .env
             echo "WEBHOOK_URL=$WEBHOOK_URL" >> .env
 
-            docker compose -p "$CONTAINER_NAME" down
-            docker compose -p "$CONTAINER_NAME" up -d --build
+            docker compose -p "$CONTAINER_NAME" -f "$COMPOSE_FILE" down
+            docker compose -p "$CONTAINER_NAME" -f "$COMPOSE_FILE" up -d --build
 
             echo "🔗 Устанавливаем Webhook: $WEBHOOK_URL"
             curl -s -X POST "https://api.telegram.org/bot$BOT_TOKEN/setWebhook" \
