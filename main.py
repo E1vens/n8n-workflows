@@ -66,6 +66,7 @@ async def telegram_webhook(request: Request):
             return await handle_text_message(chat_id, text, send_message)
 
         elif "callback_query" in data:
+            logging.info("📩 callback_query получен: %s", json.dumps(data, indent=2, ensure_ascii=False))  # 🟡 ВАЖНО!
             callback = data["callback_query"]
             chat_id = callback["from"]["id"]
             data_value = callback.get("data", "")
@@ -79,4 +80,4 @@ async def telegram_webhook(request: Request):
 
     except Exception as e:
         logging.exception("❌ Глобальная ошибка:")
-        return {"ok": True}
+        return {"ok": True"}
