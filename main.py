@@ -25,7 +25,7 @@ if branch == "main":
 else:
     TELEGRAM_TOKEN = os.getenv("TEST_TELEGRAM_TOKEN")
 
-API_URL = TELEGRAM_API_URL
+from config import TELEGRAM_API_URL
 
 
 # --- Отправка сообщений в Telegram ---
@@ -54,7 +54,7 @@ async def send_message(
     logging.info("Payload: %s", json.dumps(payload, indent=2, ensure_ascii=False))
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(f"{API_URL}/{method}", json=payload)
+        response = await client.post(f"{TELEGRAM_API_URL}/{method}", json=payload)
         logging.info("Ответ Telegram: %s %s", response.status_code, response.content.decode())
 
 
