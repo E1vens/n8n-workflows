@@ -1,0 +1,10 @@
+# Игнорировать конфиги и временные файлы
+.env
+docker-compose.test.yml
+test_supabase.py
+__pycache__/
+*.pyc
+
+# Игнорировать IDE-шный мусор
+.vscode/
+.idea/
