@@ -27,8 +27,6 @@ async def enable_ai_assistant(chat_id, send_message):
 
 
 async def handle_text_message_ai(chat_id: int, message: str):
-    mode = get_ai_mode(chat_id)
-
     # ❌ Не активируем ИИ на системные фразы-кнопки
     IGNORED_FOR_AI = [
         "🤖 ии консультант", "ии консультант", "ai assistant", "asistente ia",
@@ -41,23 +39,12 @@ async def handle_text_message_ai(chat_id: int, message: str):
     if message.strip().lower() in IGNORED_FOR_AI:
         return None
 
-    if not mode or mode == "detect":
-        mode = await detect_ai_mode_gpt(message)
-        print(f"🤖 GPT определил режим: {mode}")
+    # 🧠 ВСЕГДА определяем режим через GPT
+    mode = await detect_ai_mode_gpt(message)
+    print(f"🤖 GPT определил режим: {mode}")
 
-        if mode == "company":
-            mode = "faq"
-
-        set_ai_mode(chat_id, mode)
-
-    
-    if not mode:
-        messages = [
-            {"role": "system", "content": "Ты умный помощник. Отвечай дружелюбно и понятно."},
-            {"role": "user", "content": message}
-        ]
-        return await ask_gpt(messages)
-
+    if mode == "company":
+        mode = "faq"
 
     if mode == "chat":
         messages = [
